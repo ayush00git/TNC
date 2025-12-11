@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+.noise-bg {
+  background-image: url('/noise.png');
+  background-repeat: repeat;
+}
+
+.font-monda {
+  font-family: 'Monda', sans-serif;
+}
+
+/* fonts */
+@import url('https://fonts.googleapis.com/css2?family=Monda:wght@400;700&display=swap');
