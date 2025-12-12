@@ -39,7 +39,7 @@ function HeroSection() {
               cursorCharacter="|"
             />
           </h1>
-          <button className="border-2 cursor-pointer px-12 py-3 rounded-full border-green-500 text-green-500 mt-4 font-monda bg-[#315630] hover:bg-black hover:text-green pointer-events-auto">
+          <button className="border-2 cursor-pointer px-12 py-3 rounded-full border-green-500 text-green-500 mt-4 font-monda bg-black hover:bg-[#315630] transition-all ease-out hover:text-green pointer-events-auto">
             Get Started
           </button>
         </div>
