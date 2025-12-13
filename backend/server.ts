@@ -1,14 +1,15 @@
+import express, { urlencoded } from "express";
 import dotenv from "dotenv";
 dotenv.config();
 
-import express from "express";
+// functions
 import { connectToMongo } from "./services/connection"
 
+// routes
 import { chatRoute } from "./routes/chat"
 
 const app = express();
 
-const PORT = process.env.PORT || 8000;
 const mongoUri = process.env.MONGO_URI;
 
 if(!mongoUri) {
@@ -21,6 +22,9 @@ connectToMongo(mongoUri)
     console.log(`Error while connecting to database: ${e}`)
   );
 
+app.use(express.json());
+app.use(urlencoded({ extended: true }));  
+
 app.get("/", (req, res) => {
   return res
     .status(200)
@@ -29,4 +33,5 @@ app.get("/", (req, res) => {
 
 app.use('/chatRoom', chatRoute);
 
-app.listen(8000, () => console.log(`Backend Working: http://localhost:8000`));
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => console.log(`Backend Working: http://localhost:${PORT}`));
