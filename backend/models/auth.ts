@@ -4,7 +4,8 @@ export interface IAuth {
     _id: Types.ObjectId,
     name: string,
     email: string, 
-    password: string    
+    password: string,
+    salt: string,
 }
 
 const authSchema: Schema = new Schema({
