@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Auth from "../models/auth";
 import { generateToken } from "../services/authToken";
+import { generateSalt, hashPassword } from "../services/authUtils";
 
 export const handleUserSignUp = async (req: Request, res: Response) => {
   try {
@@ -10,16 +11,20 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "All the fields are required" });
     }
 
+    const salt = generateSalt();
+    const hash = hashPassword(password, salt);
+    
     const newUser = new Auth({
       name,
       email,
-      password,
+      password: hash,
+      salt: salt,
     });
     await newUser.save();
 
     return res.status(200).json({
-      message: "New user created successfully",
-      new_user: {
+      "message": "New user created successfully",
+      "new user": {
         name,
         email,
       },
@@ -36,7 +41,11 @@ export const handleUserLogIn = async (req: Request, res: Response) => {
   if(!existingUser) {
     return res.status(400).json({ "message": "You don't have an account" });
   }
-  
+
+  const inputhash = hashPassword(password, existingUser.salt);
+  if(inputhash != existingUser.password) {
+    return res.status(400).json({ "message": "Incorrect password" })
+  }
   const token = generateToken(existingUser);
   res.cookie("token", token, {
     httpOnly: true,
