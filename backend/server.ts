@@ -7,6 +7,7 @@ import { connectToMongo } from "./services/connection"
 
 // routes
 import { chatRoute } from "./routes/chat"
+import { authRoute } from "./routes/auth";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.get("/", (req, res) => {
 });
 
 app.use('/chatRoom', chatRoute);
+app.use('/auth', authRoute)
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Backend Working: http://localhost:${PORT}`));
