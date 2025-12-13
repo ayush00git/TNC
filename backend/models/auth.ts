@@ -21,6 +21,9 @@ const authSchema: Schema = new Schema({
         type: String,
         required: true,
     },
+    salt: {
+        type: String,
+    }
 }, { timestamps: true } );
 
 export default model<IAuth>("Auth", authSchema);
