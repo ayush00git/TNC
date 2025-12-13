@@ -1,6 +1,7 @@
 import express, { urlencoded } from "express";
 import dotenv from "dotenv";
 dotenv.config();
+import cors from "cors";
 
 // functions
 import { connectToMongo } from "./services/connection"
@@ -23,6 +24,11 @@ connectToMongo(mongoUri)
   .catch((e: string) =>
     console.log(`Error while connecting to database: ${e}`)
   );
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}))
 
 app.use(express.json());
 app.use(urlencoded({ extended: true }));  
