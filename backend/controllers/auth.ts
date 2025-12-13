@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import IAuth from "../models/auth";
+import Auth from "../models/auth";
+import { generateToken } from "../services/authToken";
 
 export const handleUserSignUp = async (req: Request, res: Response) => {
   try {
@@ -9,15 +10,16 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "All the fields are required" });
     }
 
-    const newUser = new IAuth({
+    const newUser = new Auth({
       name,
       email,
       password,
     });
     await newUser.save();
+
     return res.status(200).json({
       message: "New user created successfully",
-      newUser: {
+      new_user: {
         name,
         email,
       },
@@ -28,7 +30,17 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
   }
 };
 
-export const handleUserLogIn = async (req: Request, res: Response) => {};
+export const handleUserLogIn = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  const existingUser = await Auth.findOne({ email });
+  if(!existingUser) {
+    return res.status(400).json({ "message": "You don't have an account" });
+  }
+  
+  const token = generateToken(existingUser);
+  res.cookie("token", token);
+  return res.status(200).json({ "message": "Logged in success" });
+};
 
 export const getLogin = (req: Request, res: Response) => {
   return res.status(200).json({ message: "Login page" });

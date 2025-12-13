@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { uploadToS3 } from "../services/s3Bucket";
-import IChat from "../models/chat";
+import Chat from "../models/chat";
 
 export const sendChat = async(req: Request, res: Response) => {
     try {
@@ -14,7 +14,7 @@ export const sendChat = async(req: Request, res: Response) => {
         const imageUrl = await uploadToS3(image);
 
         // save to database
-        const chatMessage = new IChat({
+        const chatMessage = new Chat({
             text,
             imageURL: imageUrl,
         })

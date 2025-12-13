@@ -8,6 +8,7 @@ import { connectToMongo } from "./services/connection"
 // routes
 import { chatRoute } from "./routes/chat"
 import { authRoute } from "./routes/auth";
+import { allowOnlyAuthenticatedUser } from "./middlewares/auth";
 
 const app = express();
 
@@ -26,7 +27,7 @@ connectToMongo(mongoUri)
 app.use(express.json());
 app.use(urlencoded({ extended: true }));  
 
-app.get("/", (req, res) => {
+app.get("/", allowOnlyAuthenticatedUser ,(req, res) => {
   return res
     .status(200)
     .json({ message: "Hey the server is in development phase" });
