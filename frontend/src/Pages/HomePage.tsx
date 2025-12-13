@@ -1,5 +1,5 @@
-import AboutSection from "../Page/AboutSection"
-import HeroSection from "../Page/HeroSection"
+import AboutSection from "../Sections/AboutSection"
+import HeroSection from "../Sections/HeroSection"
 
 function HomePage() {
     return(
@@ -7,6 +7,6 @@ function HomePage() {
             <HeroSection />
             <AboutSection />
         </>
-    ) 
+    )
 }
 export default HomePage
