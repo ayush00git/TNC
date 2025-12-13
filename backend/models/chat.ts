@@ -1,6 +1,7 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 
-export interface IChat extends Document {
+export interface IChat {
+  _id: Types.ObjectId,
   text: string;
   imageURL: string;
 }
