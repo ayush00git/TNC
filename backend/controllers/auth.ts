@@ -56,11 +56,3 @@ export const handleUserLogIn = async (req: Request, res: Response) => {
 
   return res.status(200).json({ "message": "Logged in success" });
 };
-
-export const getLogin = (req: Request, res: Response) => {
-  return res.status(200).json({ message: "Login page" });
-};
-
-export const getSignup = (req: Request, res: Response) => {
-  return res.status(200).json({ message: "Signup page" });
-};

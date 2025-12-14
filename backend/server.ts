@@ -39,8 +39,8 @@ app.get("/", allowOnlyAuthenticatedUser ,(req, res) => {
     .json({ message: "Hey the server is in development phase" });
 });
 
-app.use('/chatRoom', chatRoute);
-app.use('/auth', authRoute)
+app.use('/api/chatRoom', chatRoute);
+app.use('/api/auth', authRoute)
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Backend Working: http://localhost:${PORT}`));
