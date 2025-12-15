@@ -1,15 +1,15 @@
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import { hashPassword } from "./authUtils";
+import { generateToken } from "./authToken";
 
 dotenv.config();
 
-export const verifyAcc = async (email: string) => {
+export const verifyAcc = async (user: any) => {
   try {
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 576,
+      port: 587,
       secure: false,
       auth: {
         user: process.env.MAIL_USER!,
@@ -17,11 +17,11 @@ export const verifyAcc = async (email: string) => {
       },
     });
 
-    const randomHash = jwt.sign(email, process.env.JWT_ENCRYP_KEY!);
+    const randomHash = generateToken(user);
 
     await transporter.sendMail({
       from: process.env.MAIL_USER!,
-      to: email,
+      to: user.email,
       subject: "Verification of email for TNC account",
       html: `
                 <!DOCTYPE html>
@@ -45,14 +45,14 @@ export const verifyAcc = async (email: string) => {
                         /* Container */
                         .email-wrapper {
                             width: 100%;
-                            background-color: #121212;
+                            background-color: #ffffff;
                             padding: 40px 0;
                         }
 
                         .email-content {
                             max-width: 600px;
                             margin: 0 auto;
-                            background-color: #fff;
+                            background-color: #121212;
                             border-radius: 8px;
                             overflow: hidden;
                             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
@@ -193,7 +193,7 @@ export const verifyAcc = async (email: string) => {
                                 
                                 <div class="link-fallback">
                                     <p>If the button above doesn't work, copy and paste this link into your browser:</p>
-                                    <a href="#">https://tnc.com/auth/verify-email/99281-confirmation-x7</a>
+                                    <a>http://localhost:${process.env.PORT}/api/auth/verify-acc?hash=${randomHash}</a>
                                 </div>
                             </div>
 

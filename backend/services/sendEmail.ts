@@ -192,7 +192,7 @@ export const sendEmail = async (user: any): Promise<boolean> => {
                       
                       <div class="link-fallback">
                           <p>If the button above doesn't work, copy and paste this link into your browser:</p>
-                          <a href="#">https://tnc.com/auth/reset-password/83920-token-21</a>
+                          <a>https://localhost:${process.env.PORT}/api/auth/reset-password?token=${token}</a>
                       </div>
                   </div>
 
