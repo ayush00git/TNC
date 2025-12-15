@@ -41,10 +41,12 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
 };
 
 export const handleUserLogIn = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  if( !email || !password ) {
+    return res.status(400).json({ "message": "All the fields are required" });
+  }
   try {
-    const { email, password } = req.body;
     const existingUser = await Auth.findOne({ email });
-    
     if(!existingUser) {
       return res.status(400).json({ "message": "You don't have an account" });
     }
@@ -73,16 +75,18 @@ export const handleUserLogIn = async (req: Request, res: Response) => {
 
 // via old password
 export const handleForgetPassViaOld = async(req: Request, res: Response) => {
-  try {
-    const { email, oldPassword, newPassword } = req.body;
-    const user = await Auth.findOne({ email });
+  const { email, oldPassword, newPassword } = req.body;
+  if( !email || !oldPassword || !newPassword ) {
+    return res.status(400).json({ "message": "All the fields are required" });
+  }
 
+  try {
+    const user = await Auth.findOne({ email });
     if(!user) {
       return res.status(400).json({ "message": "Account with that email does not exists" });
     }
 
     const oldHash = hashPassword(oldPassword, user?.salt);
-
     if(oldHash !== user?.password) {
       return res.status(400).json({ "message": "You have entered a wrong password" });
     }

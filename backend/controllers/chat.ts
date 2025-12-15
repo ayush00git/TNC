@@ -7,11 +7,10 @@ export const sendChat = async(req: Request, res: Response) => {
         const { text } = req.body;
         const image = req.file;
 
-        if(!image) {
-            console.log("Please upload the file");
-            return;
+        if( !text ) {
+            return res.status(400).json({ "message": "message can't be sent empty" });
         }
-        const imageUrl = await uploadToS3(image);
+        const imageUrl = await uploadToS3(image!); // promised that image would be given, change it afterwards
 
         // save to database
         const chatMessage = new Chat({
