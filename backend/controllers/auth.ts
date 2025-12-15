@@ -5,6 +5,7 @@ import { generateSalt, hashPassword } from "../services/authUtils";
 import { sendEmail } from "../services/sendEmail";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { verifyAcc } from "../services/verifyAcc";
 
 dotenv.config();
 
@@ -24,21 +25,33 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
       email,
       password: hash,
       salt: salt,
+      isVerified: false,
     });
+    verifyAcc(email);
     await newUser.save();
 
     return res.status(200).json({
-      "message": "New user created successfully",
-      "new user": {
-        name,
-        email,
-      },
-    });
+      "message": "Email sent for verification"});
   } catch (error) {
     console.log(`While signing up`);
     throw new Error(`While creating a new User`);
   }
 };
+
+export const handleVerifyEmail = async (req: Request, res: Response) => {
+  const queryHash = req.query.hash as string;
+  const decoder = jwt.verify(queryHash, process.env.JWT_ENCRYP_KEY!) as {
+    email: string,
+  };
+  
+  const user = await Auth.findOne({ email: decoder.email });
+  if(!user) {
+    return res.status(400).json({ "message": "User with that email is not registered" });
+  }
+
+  user.isVerified = true;
+  await user.save();
+}
 
 export const handleUserLogIn = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -47,8 +60,13 @@ export const handleUserLogIn = async (req: Request, res: Response) => {
   }
   try {
     const existingUser = await Auth.findOne({ email });
+
     if(!existingUser) {
       return res.status(400).json({ "message": "You don't have an account" });
+    }
+    
+    if(!existingUser.isVerified) {
+      return res.status(400).json({ "message": "Account is unverified" });
     }
 
     const inputhash = hashPassword(password, existingUser.salt);

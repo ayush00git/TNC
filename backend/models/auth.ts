@@ -6,6 +6,7 @@ export interface IAuth {
     email: string, 
     password: string,
     salt: string,
+    isVerified: boolean,
 }
 
 const authSchema: Schema = new Schema({
@@ -24,6 +25,10 @@ const authSchema: Schema = new Schema({
     },
     salt: {
         type: String,
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
     }
 }, { timestamps: true } );
 
