@@ -17,6 +17,11 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "All the fields are required" });
     }
 
+    const existingUser = await Auth.findOne({ email });
+    if(existingUser) {
+      return res.status(400).json({ "message": "You already have an account, login instead OR if you want to verify your email then check your email inbox or contact us" });
+    }
+
     const salt = generateSalt();
     const hash = hashPassword(password, salt);
 
