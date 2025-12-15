@@ -1,15 +1,9 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import LoginForm from './components/Login';
-import SignupForm from './components/Signup';
 
+
+import ChatApp from './components/ChatApp'
 
 function App() {
-  return (
-    <Routes>
-      <Route path="/auth/login" element={<LoginForm />} />
-      <Route path="/auth/signup" element={<SignupForm />} />
-    </Routes>
-  );
+  return <ChatApp />
 }
 
-export default App;
+export default App
