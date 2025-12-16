@@ -1,9 +1,14 @@
-
-
-import ChatApp from './components/ChatApp'
+import ChatInterface from "./Pages/ChatInterface"
+import JoinChatRoom from "./Pages/JoinChatRoom"
 
 function App() {
-  return <ChatApp />
+  return (
+    <>
+      <ChatInterface />
+      <JoinChatRoom />
+      
+    </>
+  )
 }
 
 export default App
