@@ -1,12 +1,14 @@
 import ChatInterface from "./Pages/ChatInterface"
-import JoinChatRoom from "./Pages/JoinChatRoom"
+import JoinActiveRoom from "./Pages/JoinActiveRoom"
+import { Routes, Route } from "react-router-dom"
 
 function App() {
   return (
     <>
-      <ChatInterface />
-      <JoinChatRoom />
-      
+      <Routes>
+        <Route path="/join-room" element= {<JoinActiveRoom />} />
+        <Route path="/room/:roomId" element= {<ChatInterface />} />
+      </Routes>
     </>
   )
 }
