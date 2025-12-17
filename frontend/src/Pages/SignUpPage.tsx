@@ -55,6 +55,17 @@ export default function SignUpPage() {
         return;
       }
 
+      // Persist basic user info so chat can show their name
+      try {
+        const storedUser = {
+          name: formData.name,
+          email: formData.email,
+        };
+        localStorage.setItem('authUser', JSON.stringify(storedUser));
+      } catch {
+        // ignore storage failures
+      }
+
       setSuccess(data?.message || 'Email sent for verification');
     } catch (err) {
       console.error(err);

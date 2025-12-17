@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Cpu, Cloud, Palette, Layout, Server, Hash } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -25,9 +25,70 @@ export default function RoomSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname; // e.g. "/room/design"
+  const [joinedSlugs, setJoinedSlugs] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load joined rooms: use localStorage cache first, then fetch from API
+  useEffect(() => {
+    const fetchJoinedRooms = async () => {
+      // Load from cache immediately for instant UI
+      try {
+        const cached = localStorage.getItem('joinedRooms');
+        if (cached) {
+          const parsed: string[] = JSON.parse(cached);
+          setJoinedSlugs(parsed);
+          setIsLoading(false);
+        }
+      } catch {
+        // ignore cache errors
+      }
+
+      // Fetch from API to sync with backend (source of truth)
+      try {
+        const res = await fetch('http://localhost:8001/api/room/joined', {
+          credentials: 'include',
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const slugs = (data.rooms || []).map((room: { roomId: string }) => room.roomId);
+          
+          console.log('Fetched joined rooms from API:', slugs); // Debug log
+          
+          // Update state and cache
+          setJoinedSlugs(slugs);
+          localStorage.setItem('joinedRooms', JSON.stringify(slugs));
+        } else {
+          console.error('Failed to fetch joined rooms:', res.status);
+        }
+      } catch (err) {
+        console.error('Failed to fetch joined rooms:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJoinedRooms();
+  }, [location.pathname]); // Re-fetch when route changes (e.g., after joining a room)
+
+  // Match rooms by slug (case-insensitive to handle any mismatches)
+  const joinedRooms = ROOMS.filter(room => {
+    return joinedSlugs.some(slug => 
+      slug.toLowerCase() === room.slug.toLowerCase()
+    );
+  });
+  
+  // Debug: log what we're matching
+  useEffect(() => {
+    if (joinedSlugs.length > 0) {
+      console.log('Joined slugs from API/cache:', joinedSlugs);
+      console.log('Available ROOMS slugs:', ROOMS.map(r => r.slug));
+      console.log('Filtered joined rooms:', joinedRooms.map(r => r.slug));
+    }
+  }, [joinedSlugs]);
   
   // Logic to determine which tab is active based on the current URL path
-  const activeIndex = ROOMS.findIndex(room => currentPath.includes(room.slug));
+  const activeIndex = joinedRooms.findIndex(room => currentPath.includes(room.slug));
   // Default to 0 if no match found (e.g. root path)
   const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
 
@@ -51,24 +112,28 @@ export default function RoomSidebar() {
       <div className="flex-1 w-full flex flex-col items-center relative gap-4">
         
         {/* Animated Sliding Background - moves smoothly behind the icons */}
-        <div 
-          className="absolute w-12 h-12 bg-[#1A1625] rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
-          style={{ 
-            top: `${safeActiveIndex * 64}px`, // 48px icon + 16px gap = 64px stride
-            opacity: activeIndex >= 0 ? 1 : 0 
-          }}
-        />
-        
-        {/* Animated Active Indicator - the small purple strip on the left */}
-        <div 
-          className="absolute left-0 w-1 h-6 bg-indigo-500 rounded-r-full transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] delay-75"
-          style={{ 
-            top: `${safeActiveIndex * 64 + 12}px`,
-            opacity: activeIndex >= 0 ? 1 : 0 
-          }}
-        />
+        {joinedRooms.length > 0 && (
+          <>
+            <div 
+              className="absolute w-12 h-12 bg-[#1A1625] rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+              style={{ 
+                top: `${safeActiveIndex * 64}px`, // 48px icon + 16px gap = 64px stride
+                opacity: activeIndex >= 0 ? 1 : 0 
+              }}
+            />
+            
+            {/* Animated Active Indicator - the small purple strip on the left */}
+            <div 
+              className="absolute left-0 w-1 h-6 bg-indigo-500 rounded-r-full transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] delay-75"
+              style={{ 
+                top: `${safeActiveIndex * 64 + 12}px`,
+                opacity: activeIndex >= 0 ? 1 : 0 
+              }}
+            />
+          </>
+        )}
 
-        {ROOMS.map((room) => {
+        {joinedRooms.map((room, index) => {
           // Check strict equality for hover/active styling logic if needed
           const isActive = currentPath.includes(room.slug);
           
@@ -93,6 +158,17 @@ export default function RoomSidebar() {
             </button>
           );
         })}
+      </div>
+
+      {/* Add / Manage Rooms */}
+      <div className="mb-4">
+        <button
+          onClick={() => navigate('/join-room')}
+          className="w-10 h-10 rounded-2xl border border-dashed border-slate-600 text-slate-400 hover:border-indigo-500 hover:text-indigo-300 flex items-center justify-center transition-colors cursor-pointer"
+          title="Join another room"
+        >
+          +
+        </button>
       </div>
 
       {/* User Avatar (Bottom) */}

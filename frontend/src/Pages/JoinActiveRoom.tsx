@@ -81,11 +81,99 @@ const ROOM_DATA: Room[] = [
 
 const ChatRoomCard = ({ room }: { room: Room }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const handleNavigation = (slug: string) => {
-    const targetPath = `/room/${slug}`;
-    console.log(`Navigating to: ${targetPath}`);
-    navigate(targetPath);
+
+  const handleJoinRoom = async (slug: string) => {
+    setJoinError(null);
+    try {
+      setIsJoining(true);
+
+      console.log('Attempting to join room:', slug); // Debug
+
+      // Hit backend join API so the user is added as a member of this room
+      const res = await fetch(`http://localhost:8001/api/room/${slug}/join`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      console.log('Join API response status:', res.status); // Debug
+
+      let data;
+      try {
+        data = await res.json();
+        console.log('Join API response data:', data); // Debug
+      } catch (parseError) {
+        console.error('Failed to parse join API response:', parseError);
+        const text = await res.text();
+        console.error('Response text:', text);
+        setJoinError("Failed to join room - invalid response");
+        setIsJoining(false);
+        return;
+      }
+
+      if (!res.ok) {
+        console.error('Join API failed:', data);
+        setJoinError(data?.message || "Failed to join room");
+        setIsJoining(false);
+        return;
+      }
+
+      console.log('Successfully joined room:', slug); // Debug
+
+      // Refresh joined rooms from API to sync cache with backend (await to ensure cache is updated)
+      try {
+        console.log('Refreshing joined rooms list...'); // Debug
+        const refreshRes = await fetch('http://localhost:8001/api/room/joined', {
+          credentials: 'include',
+        });
+        
+        console.log('Refresh API response status:', refreshRes.status); // Debug
+        
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          console.log('Refresh API response data:', refreshData); // Debug
+          const slugs = (refreshData.rooms || []).map((room: { roomId: string }) => room.roomId);
+          console.log('Refreshed joined rooms after join:', slugs); // Debug
+          localStorage.setItem('joinedRooms', JSON.stringify(slugs));
+        } else {
+          const errorData = await refreshRes.json().catch(() => ({}));
+          console.warn('Failed to refresh joined rooms:', refreshRes.status, errorData);
+          // If refresh fails, manually add to cache as fallback
+          const raw = localStorage.getItem("joinedRooms");
+          const existing: string[] = raw ? JSON.parse(raw) : [];
+          if (!existing.includes(slug)) {
+            existing.push(slug);
+            localStorage.setItem("joinedRooms", JSON.stringify(existing));
+            console.log('Added to cache as fallback:', existing); // Debug
+          }
+        }
+      } catch (err) {
+        console.error('Error refreshing joined rooms:', err);
+        // If refresh fails, manually add to cache as fallback
+        try {
+          const raw = localStorage.getItem("joinedRooms");
+          const existing: string[] = raw ? JSON.parse(raw) : [];
+          if (!existing.includes(slug)) {
+            existing.push(slug);
+            localStorage.setItem("joinedRooms", JSON.stringify(existing));
+            console.log('Added to cache as fallback (catch):', existing); // Debug
+          }
+        } catch (storageErr) {
+          console.error('Storage error:', storageErr);
+        }
+      }
+
+      // On success, navigate into the room chat
+      const targetPath = `/room/${slug}`;
+      console.log(`Joined room, navigating to: ${targetPath}`);
+      navigate(targetPath);
+    } catch (err) {
+      console.error(err);
+      setJoinError("Something went wrong while joining. Please try again.");
+      setIsJoining(false);
+    }
   };
 
   return (
@@ -127,15 +215,16 @@ const ChatRoomCard = ({ room }: { room: Room }) => {
       </div>
 
       {/* Button Section - 8pt spacing (mt-8 = 32px) */}
-      <div className="mt-8">
+      <div className="mt-8 space-y-2">
         <button
           onClick={() => {
-            handleNavigation(room.slug);
+            void handleJoinRoom(room.slug);
           }}
+          disabled={isJoining}
           className={`
             w-full py-3 px-6 rounded-full
             bg-[#060010] 
-            border-2 cursor-pointer
+            border-2 ${isJoining ? 'cursor-wait opacity-80' : 'cursor-pointer'}
             text-sm font-medium tracking-wider
             flex items-center justify-center gap-2
             transition-all duration-300 ease-out
@@ -146,13 +235,17 @@ const ChatRoomCard = ({ room }: { room: Room }) => {
             }
           `}
         >
-          <span>Join Room</span>
+          <span>{isJoining ? "Joining..." : "Join Room"}</span>
           <ArrowRight
             className={`w-4 h-4 transition-transform duration-300 ${
               isHovered ? "translate-x-1" : ""
             }`}
           />
         </button>
+
+        {joinError && (
+          <p className="text-xs text-red-400 text-center">{joinError}</p>
+        )}
       </div>
     </div>
   );

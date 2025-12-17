@@ -44,11 +44,20 @@ export default function LoginPage() {
         return;
       }
 
-      // Persist minimal user info for chat UI
+      // Persist / merge basic user info for chat UI
       try {
-        const storedUser = {
+        let storedUser: { email: string; name?: string } = {
           email: formData.email,
         };
+
+        const existingRaw = localStorage.getItem('authUser');
+        if (existingRaw) {
+          const existing = JSON.parse(existingRaw) as { email?: string; name?: string };
+          if (existing.email === formData.email && existing.name) {
+            storedUser = { email: existing.email, name: existing.name };
+          }
+        }
+
         localStorage.setItem('authUser', JSON.stringify(storedUser));
       } catch {
         // ignore storage failures
