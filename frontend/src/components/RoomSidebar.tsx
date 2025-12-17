@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Cpu, Cloud, Palette, Layout, Server, Hash } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom'; // TODO: Uncomment for real routing
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // --- Types ---
 interface Room {
@@ -21,12 +21,10 @@ const ROOMS: Room[] = [
   { id: 7, title: "Backend", slug: "backend", icon: Server }
 ];
 
-interface RoomSidebarProps {
-  currentPath?: string; // e.g. "/room/design" - used to set the active state
-}
-
-export default function RoomSidebar({ currentPath = '/room/blockchain' }: RoomSidebarProps) {
+export default function RoomSidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname; // e.g. "/room/design"
   
   // Logic to determine which tab is active based on the current URL path
   const activeIndex = ROOMS.findIndex(room => currentPath.includes(room.slug));
@@ -44,9 +42,9 @@ export default function RoomSidebar({ currentPath = '/room/blockchain' }: RoomSi
       
       {/* Brand / Logo */}
       <div className="mb-8">
-         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 cursor-pointer hover:opacity-90 transition-opacity">
-           <span className="font-bold text-white">D</span>
-         </div>
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 cursor-pointer hover:opacity-90 transition-opacity">
+          <span className="font-bold text-white">D</span>
+        </div>
       </div>
 
       {/* Navigation Items Container */}
@@ -79,7 +77,7 @@ export default function RoomSidebar({ currentPath = '/room/blockchain' }: RoomSi
               key={room.id}
               onClick={() => handleNavigation(room.slug)}
               className={`
-                relative z-10 group w-12 h-12 rounded-2xl flex items-center justify-center transition-colors duration-300
+                relative z-10 group w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer transition-colors duration-300
                 ${isActive 
                   ? 'text-indigo-400' 
                   : 'text-slate-500 hover:text-slate-300'}

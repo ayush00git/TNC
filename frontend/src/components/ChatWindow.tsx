@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, Users, Hash, Plus, Smile, X, MoreHorizontal, Loader2
 } from 'lucide-react';
-import { useParams } from 'react-router-dom'; // TODO: Enable for real routing
+import { useParams } from 'react-router-dom';
 
 // --- Types ---
 interface User {
@@ -26,31 +26,13 @@ interface RoomDetails {
   members: User[];
 }
 
-// --- Mock Database (This replaces your hardcoded constants) ---
+// --- Mock Database (used for current user only) ---
 const MOCK_DB = {
   user: {
     id: 99,
     name: "Alex Dev",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
   },
-  rooms: {
-    'blockchain': {
-      title: "Blockchain",
-      description: "Web3 & DeFi Protocol Discussions",
-      members: [
-        { id: 1, name: "Sarah Chen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah", role: 'Admin' },
-        { id: 2, name: "Mike Ross", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike", role: 'Mod' },
-      ]
-    },
-    'design': {
-      title: "Design",
-      description: "UI/UX, Accessibility & Design Systems",
-      members: [
-        { id: 3, name: "Jessica Suits", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jessica", role: 'Admin' },
-        { id: 5, name: "Louis Litt", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Louis" },
-      ]
-    }
-  }
 };
 
 // --- Sub-Components ---
@@ -103,42 +85,86 @@ const MemberModal = ({ isOpen, onClose, members }: { isOpen: boolean; onClose: (
 };
 
 export default function ChatWindow() {
-  // const { roomId } = useParams<{ roomId: string }>(); 
-  // TODO: Use real param. defaulting to 'blockchain' for preview
-  const roomId = "blockchain"; 
+  const { roomId } = useParams<{ roomId: string }>(); 
 
   const [isLoading, setIsLoading] = useState(true);
   const [activeRoom, setActiveRoom] = useState<RoomDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState("");
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // --- API Simulation Effect ---
+  // Load authenticated user (stored by LoginPage) for chat UI
   useEffect(() => {
-    setIsLoading(true);
-    
-    // Simulate Network Request
-    const timer = setTimeout(() => {
-      // Fetch Room Info
-      const roomData = MOCK_DB.rooms[roomId as keyof typeof MOCK_DB.rooms];
-      
-      if (roomData) {
-        setActiveRoom({
-          id: roomId,
-          ...roomData
-        });
-        // Simulate Fetching Messages
-        setMessages([
-          { id: 1, userId: 1, content: `Welcome to the ${roomData.title} channel!`, timestamp: "10:00 AM" },
-          { id: 2, userId: 2, content: "Glad to be here.", timestamp: "10:05 AM" }
-        ]);
-      }
-      
-      setIsLoading(false);
-    }, 800); // 800ms loading delay simulation
+    try {
+      const raw = localStorage.getItem('authUser');
+      if (raw) {
+        const parsed = JSON.parse(raw) as { email?: string; name?: string };
+        const displayName =
+          parsed.name ||
+          (parsed.email ? parsed.email.split('@')[0] : 'You');
+        const avatarSeed = parsed.email || displayName;
 
-    return () => clearTimeout(timer);
+        setCurrentUser({
+          id: 99,
+          name: displayName,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+            avatarSeed
+          )}`,
+        });
+      } else {
+        setCurrentUser(MOCK_DB.user);
+      }
+    } catch {
+      setCurrentUser(MOCK_DB.user);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!roomId) {
+      setActiveRoom(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+
+    const fetchRoom = async () => {
+      try {
+        const res = await fetch(`http://localhost:8001/api/room/${roomId}`, {
+          credentials: 'include',
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch room: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const room = Array.isArray(data.room) ? data.room[0] : null;
+
+        if (room) {
+          setActiveRoom({
+            id: room.roomId,
+            title: room.title,
+            description: room.description,
+            members: [], // backend doesn't send members yet
+          });
+
+          // You can later replace this with a real messages API
+          setMessages([]);
+        } else {
+          setActiveRoom(null);
+        }
+      } catch (err) {
+        console.error(err);
+        setActiveRoom(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRoom();
   }, [roomId]);
 
   // Auto-scroll
@@ -152,9 +178,11 @@ export default function ChatWindow() {
     e?.preventDefault();
     if (!messageText.trim()) return;
 
+    const effectiveUser = currentUser || MOCK_DB.user;
+
     const newMessage: Message = {
       id: Date.now(),
-      userId: MOCK_DB.user.id,
+      userId: effectiveUser.id,
       content: messageText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -183,7 +211,8 @@ export default function ChatWindow() {
   }
 
   // --- Render Main Chat ---
-  const allMembers = [MOCK_DB.user, ...activeRoom.members];
+  const effectiveUser = currentUser || MOCK_DB.user;
+  const allMembers = [effectiveUser, ...activeRoom.members];
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-[#060010] relative min-w-0">
@@ -232,8 +261,8 @@ export default function ChatWindow() {
           </div>
 
           {messages.map((msg, idx) => {
-            const user = allMembers.find(m => m.id === msg.userId) || MOCK_DB.user;
-            const isMe = msg.userId === MOCK_DB.user.id;
+            const user = allMembers.find(m => m.id === msg.userId) || effectiveUser;
+            const isMe = msg.userId === effectiveUser.id;
             const prevMsg = messages[idx - 1];
             const isSequence = prevMsg && prevMsg.userId === msg.userId; 
 
