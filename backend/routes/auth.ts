@@ -8,4 +8,4 @@ authRoute.post('/login', handleUserLogIn);
 authRoute.post('/forget-password/viaOldPass', handleForgetPassViaOld);
 authRoute.post('/forget-password/viaEmail', handlerForgetPassViaEmail)
 authRoute.post('/reset-password', changeUserPass);
-authRoute.post('/verify-acc', handleVerifyEmail);
+authRoute.get('/verify-acc', handleVerifyEmail);

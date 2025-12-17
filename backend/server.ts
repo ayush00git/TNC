@@ -9,6 +9,7 @@ import { connectToMongo } from "./services/connection"
 // routes
 import { chatRoute } from "./routes/chat"
 import { authRoute } from "./routes/auth";
+import { roomRoute } from "./routes/room";
 import { allowOnlyAuthenticatedUser } from "./middlewares/auth";
 
 const app = express();
@@ -40,7 +41,9 @@ app.get("/", allowOnlyAuthenticatedUser ,(req, res) => {
 });
 
 app.use('/api/chatRoom', chatRoute);
-app.use('/api/auth', authRoute)
+app.use('/api/auth', authRoute);
+app.use('/api/room', allowOnlyAuthenticatedUser, roomRoute);
 
 const PORT = process.env.PORT || 8000;
+
 app.listen(PORT, () => console.log(`Backend Working: http://localhost:${PORT}`));
