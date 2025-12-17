@@ -8,7 +8,7 @@ export const sendChat = async(req: Request, res: Response) => {
         const image = req.file;
 
         if( !text ) {
-            return res.status(400).json({ "message": "message can't be sent empty" });
+            return res.status(400).json({ message: "message can't be sent empty" });
         }
         const imageUrl = await uploadToS3(image!); // promised that image would be given, change it afterwards
 
@@ -18,7 +18,7 @@ export const sendChat = async(req: Request, res: Response) => {
             imageURL: imageUrl,
         })
         chatMessage.save();
-        return res.status(200).json({ "message": "chat sent successfully"});
+        return res.status(200).json({ message: "chat sent successfully"});
     } catch (error) {
         console.log(`Error in sending the message`);
         throw new Error(`While hitting the post request`);

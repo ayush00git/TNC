@@ -1,5 +1,6 @@
 import express, { urlencoded } from "express";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 dotenv.config();
 import cors from "cors";
 
@@ -32,7 +33,8 @@ app.use(cors({
 }))
 
 app.use(express.json());
-app.use(urlencoded({ extended: true }));  
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.get("/", allowOnlyAuthenticatedUser ,(req, res) => {
   return res

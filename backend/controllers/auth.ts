@@ -19,7 +19,7 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
 
     const existingUser = await Auth.findOne({ email });
     if(existingUser) {
-      return res.status(400).json({ "message": "You already have an account, login instead OR if you want to verify your email then check your email inbox or contact us" });
+      return res.status(400).json({ message: "You already have an account, login instead OR if you want to verify your email then check your email inbox or contact us" });
     }
 
     const salt = generateSalt();
@@ -59,7 +59,7 @@ export const handleVerifyEmail = async (req: Request, res: Response) => {
 
     user.isVerified = true;
     await user.save();
-    return res.status(200).json({ "message": "Email is verified, now you can login to your account" });
+    return res.status(200).json({ message: "Email is verified, now you can login to your account" });
   } catch (error) {
     console.log(`${error}`);
     throw new Error(`While verifying the email`);

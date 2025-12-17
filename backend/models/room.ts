@@ -24,10 +24,10 @@ const roomSchema: Schema = new Schema({
         type: String,
         required: true,
     },
-    members: {
+    members: [{
         type: Schema.Types.ObjectId,
-        ref: 'User', 
-    }
+        ref: 'Auth', 
+    }]
 })
 
 export default model<IRoom>("Room", roomSchema);
