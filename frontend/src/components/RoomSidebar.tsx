@@ -103,8 +103,9 @@ export default function RoomSidebar() {
       
       {/* Brand / Logo */}
       <div className="mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 cursor-pointer hover:opacity-90 transition-opacity">
-          <span className="font-bold text-white">D</span>
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 cursor-pointer hover:opacity-90 transition-opacity"
+        onClick={() => navigate('/login')}>
+          <span className="font-bold text-white">TNC</span>
         </div>
       </div>
 
