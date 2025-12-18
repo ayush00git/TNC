@@ -42,7 +42,7 @@ app.get("/", allowOnlyAuthenticatedUser ,(req, res) => {
     .json({ message: "Hey the server is in development phase" });
 });
 
-app.use('/api/chatRoom', chatRoute);
+app.use('/api/chatRoom', allowOnlyAuthenticatedUser,chatRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/room', allowOnlyAuthenticatedUser, roomRoute);
 

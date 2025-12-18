@@ -75,7 +75,7 @@ export const handleUserLogIn = async (req: Request, res: Response) => {
     const existingUser = await Auth.findOne({ email });
 
     if (!existingUser) {
-      return res.status(400).json({ message: "You don't have an account" });
+      return res.status(400).json({ message: "You don't have an account, sign up first" });
     }
 
     if (!existingUser.isVerified) {
@@ -97,7 +97,14 @@ export const handleUserLogIn = async (req: Request, res: Response) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    return res.status(200).json({ message: "Logged in success" });
+    return res.status(200).json({
+      message: "Logged in success",
+      user: {
+        _id: existingUser._id,
+        name: existingUser.name,
+        email: existingUser.email,
+      },
+    });
   } catch (error) {
     console.log(`${error}`);
     throw new Error(`While logging in`);

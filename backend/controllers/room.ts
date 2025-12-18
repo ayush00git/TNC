@@ -22,8 +22,16 @@ export const handleCreateRoom = async (req: Request, res: Response) => {
 
 export const handleRoomInfo = async (req: Request, res: Response) => {
   const Id = req.params.roomId;
-  const room = await Room.find({ roomId: Id });
-  return res.status(200).json({ room });
+  try {
+    const room = await Room.find({ roomId: Id }).populate(
+      "members",
+      "name email"
+    );
+    return res.status(200).json({ room });
+  } catch (error) {
+    console.log(`${error}`);
+    throw new Error(`While gathering the rooms info`);
+  }
 };
 
 export const handleJoining = async (req: Request, res: Response) => {
