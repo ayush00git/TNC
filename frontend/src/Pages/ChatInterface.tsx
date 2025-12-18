@@ -1,6 +1,6 @@
-import RoomSidebar from '../components/RoomSidebar';
-import ChatWindow from '../components/ChatWindow';
-import { useParams } from 'react-router-dom';
+import RoomSidebar from "../components/RoomSidebar";
+import ChatWindow from "../components/ChatWindow";
+import { useParams } from "react-router-dom";
 
 export default function ChatInterface() {
   const { roomId } = useParams<{ roomId: string }>();

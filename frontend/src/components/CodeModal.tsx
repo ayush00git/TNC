@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Code } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { X, Code } from "lucide-react";
 
 interface CodeModalProps {
   isOpen: boolean;
@@ -8,21 +8,21 @@ interface CodeModalProps {
 }
 
 const CodeModal = ({ isOpen, onClose, onShare }: CodeModalProps) => {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState("");
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     };
 
     if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose]);
 
@@ -41,9 +41,11 @@ const CodeModal = ({ isOpen, onClose, onShare }: CodeModalProps) => {
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0A0514]">
           <div className="flex items-center gap-3">
             <Code size={18} className="text-indigo-400" />
-            <h3 className="text-white font-semibold tracking-wide">Share Code Snippet</h3>
+            <h3 className="text-white font-semibold tracking-wide">
+              Share Code Snippet
+            </h3>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
           >
@@ -59,7 +61,7 @@ const CodeModal = ({ isOpen, onClose, onShare }: CodeModalProps) => {
           />
         </div>
         <div className="px-6 py-4 border-t border-white/5 bg-[#080412] flex justify-end">
-          <button 
+          <button
             onClick={handleShare}
             className="px-6 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors"
           >

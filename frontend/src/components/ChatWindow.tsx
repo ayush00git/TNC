@@ -322,16 +322,14 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
 
   // --- Render Empty/Error State ---
 
-if (!activeRoom) {
+  if (!activeRoom) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-[#060010] animate-in fade-in duration-500">
-        
         {/* Centered Content Container */}
         <div className="flex flex-col items-center text-center space-y-6">
-          
           {/* 1. The Circular Button */}
-          <button 
-            onClick={() => navigate('/join-room')}
+          <button
+            onClick={() => navigate("/join-room")}
             className="
               group relative flex items-center justify-center
               w-24 h-24 rounded-full cursor-pointer
@@ -342,10 +340,10 @@ if (!activeRoom) {
               hover:-translate-y-2 active:scale-95
             "
           >
-            <Plus 
-              size={40} 
+            <Plus
+              size={40}
               strokeWidth={1.5}
-              className="text-slate-600 transition-colors duration-300 group-hover:text-indigo-400" 
+              className="text-slate-600 transition-colors duration-300 group-hover:text-indigo-400"
             />
           </button>
           <div className="space-y-1">
@@ -356,7 +354,6 @@ if (!activeRoom) {
               OR navigate to the sidebar to see the channels you've joined
             </p>
           </div>
-
         </div>
       </div>
     );

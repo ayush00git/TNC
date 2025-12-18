@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { X, Image, UploadCloud } from 'lucide-react';
+import React, { useEffect, useRef } from "react";
+import { X, Image, UploadCloud } from "lucide-react";
 
 interface ImageModalProps {
   isOpen: boolean;
@@ -12,17 +12,17 @@ const ImageModal = ({ isOpen, onClose, onImageSelect }: ImageModalProps) => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     };
 
     if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose]);
 
@@ -31,7 +31,7 @@ const ImageModal = ({ isOpen, onClose, onImageSelect }: ImageModalProps) => {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        if (typeof reader.result === 'string') {
+        if (typeof reader.result === "string") {
           onImageSelect(reader.result);
           onClose();
         }
@@ -52,9 +52,11 @@ const ImageModal = ({ isOpen, onClose, onImageSelect }: ImageModalProps) => {
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0A0514]">
           <div className="flex items-center gap-3">
             <Image size={18} className="text-indigo-400" />
-            <h3 className="text-white font-semibold tracking-wide">Upload Image</h3>
+            <h3 className="text-white font-semibold tracking-wide">
+              Upload Image
+            </h3>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
           >
@@ -62,24 +64,26 @@ const ImageModal = ({ isOpen, onClose, onImageSelect }: ImageModalProps) => {
           </button>
         </div>
         <div className="p-6">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              className="hidden"
-              accept="image/png, image/jpeg, image/gif"
-            />
-            <div 
-              onClick={handleUploadClick}
-              className="w-full h-64 bg-[#060010] border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-white/5 transition-colors"
-            >
-                <UploadCloud size={48} className="mb-4 text-slate-500" />
-                <p className="font-semibold">Click to upload or drag and drop</p>
-                <p className="text-xs text-slate-500 mt-1">PNG, JPG, GIF up to 10MB</p>
-            </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            className="hidden"
+            accept="image/png, image/jpeg, image/gif"
+          />
+          <div
+            onClick={handleUploadClick}
+            className="w-full h-64 bg-[#060010] border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-white/5 transition-colors"
+          >
+            <UploadCloud size={48} className="mb-4 text-slate-500" />
+            <p className="font-semibold">Click to upload or drag and drop</p>
+            <p className="text-xs text-slate-500 mt-1">
+              PNG, JPG, GIF up to 10MB
+            </p>
+          </div>
         </div>
         <div className="px-6 py-4 border-t border-white/5 bg-[#080412] flex justify-end">
-          <button 
+          <button
             onClick={handleUploadClick}
             className="px-6 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors"
           >
