@@ -172,7 +172,7 @@ export default function RoomSidebar() {
         </button>
       </div>
 
-      {/* User Avatar (Bottom) */}
+      {/* User Avatar (Bottom)
       <div className="mt-auto">
         <button className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/10 hover:border-indigo-500/50 transition-colors">
           <img 
@@ -181,7 +181,7 @@ export default function RoomSidebar() {
             className="w-full h-full bg-slate-800" 
           />
         </button>
-      </div>
+      </div> */}
     </nav>
   );
 }

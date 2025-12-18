@@ -11,6 +11,7 @@ function App() {
         <Route path="/signup" element= {<SignUpPage />} />
         <Route path="/login" element= {<LoginPage />} />
         <Route path="/join-room" element= {<JoinActiveRoom />} />
+        <Route path="/room" element= {<ChatInterface />} />
         <Route path="/room/:roomId" element= {<ChatInterface />} />
       </Routes>
     </>

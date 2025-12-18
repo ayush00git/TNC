@@ -14,6 +14,36 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
+  const fetchAndNavigate = async () => {
+    try {
+      const res = await fetch('http://localhost:8001/api/rooms', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // If no rooms are found or another error occurs, navigate to the default room creation page
+        navigate('/room');
+        return;
+      }
+      
+      const { roomIds } = data;
+      if (roomIds && roomIds.length > 0) {
+        navigate(`/room/${roomIds[0]}`);
+      } else {
+        navigate('/room');
+      }
+    } catch (err) {
+      console.error('Failed to fetch rooms, navigating to default:', err);
+      navigate('/room');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -44,27 +74,15 @@ export default function LoginPage() {
         return;
       }
 
-      // Persist / merge basic user info for chat UI
+      // Persist user info for chat UI
       try {
-        let storedUser: { email: string; name?: string } = {
-          email: formData.email,
-        };
-
-        const existingRaw = localStorage.getItem('authUser');
-        if (existingRaw) {
-          const existing = JSON.parse(existingRaw) as { email?: string; name?: string };
-          if (existing.email === formData.email && existing.name) {
-            storedUser = { email: existing.email, name: existing.name };
-          }
-        }
-
-        localStorage.setItem('authUser', JSON.stringify(storedUser));
+        localStorage.setItem('authUser', JSON.stringify(data.user));
       } catch {
         // ignore storage failures
       }
 
-      // On successful login, go to join-room or a default room
-      navigate('/join-room');
+      // On successful login, fetch rooms and navigate accordingly
+      await fetchAndNavigate();
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please try again.');

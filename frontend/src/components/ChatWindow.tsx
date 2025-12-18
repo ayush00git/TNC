@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Send,
   Users,
@@ -11,13 +12,12 @@ import {
   Code,
   Image,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
 import CodeModal from "./CodeModal";
 import ImageModal from "./ImageModal";
 
 // --- Types ---
 interface User {
-  id: number;
+  id: string;
   name: string;
   avatar: string;
   role?: string;
@@ -25,10 +25,10 @@ interface User {
 
 interface Message {
   id: number;
-  userId: number;
+  userId: string;
   content: string;
   timestamp: string;
-  type?: 'text' | 'code';
+  type?: "text" | "code";
   image?: string;
 }
 
@@ -39,10 +39,14 @@ interface RoomDetails {
   members: User[];
 }
 
+interface ChatWindowProps {
+  roomId?: string;
+}
+
 // --- Mock Database (used for current user only) ---
 const MOCK_DB = {
   user: {
-    id: 99,
+    id: "99",
     name: "Alex Dev",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
   },
@@ -50,23 +54,31 @@ const MOCK_DB = {
 
 // --- Sub-Components ---
 
-const MemberModal = ({ isOpen, onClose, members }: { isOpen: boolean; onClose: () => void; members: User[] }) => {
+const MemberModal = ({
+  isOpen,
+  onClose,
+  members,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  members: User[];
+}) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     };
 
     if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose]);
-  
+
   if (!isOpen) return null;
 
   return (
@@ -124,9 +136,8 @@ const MemberModal = ({ isOpen, onClose, members }: { isOpen: boolean; onClose: (
   );
 };
 
-export default function ChatWindow() {
-  const { roomId } = useParams<{ roomId: string }>();
-
+export default function ChatWindow({ roomId }: ChatWindowProps) {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [activeRoom, setActiveRoom] = useState<RoomDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -140,6 +151,16 @@ export default function ChatWindow() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const attachmentMenuRef = useRef<HTMLDivElement>(null);
 
+  const allMembers = useMemo(() => {
+    const members: User[] = activeRoom?.members ? [...activeRoom.members] : [];
+    if (currentUser && !members.find((m) => m.id === currentUser.id)) {
+      members.unshift(currentUser);
+    }
+    return members;
+  }, [activeRoom, currentUser]);
+
+  const effectiveUser = currentUser || MOCK_DB.user;
+
   const handleImageSelect = (dataUrl: string) => {
     setImagePreview(dataUrl);
     setIsImageModalOpen(false);
@@ -150,13 +171,17 @@ export default function ChatWindow() {
     try {
       const raw = localStorage.getItem("authUser");
       if (raw) {
-        const parsed = JSON.parse(raw) as { email?: string; name?: string };
+        const parsed = JSON.parse(raw) as {
+          _id: string;
+          email?: string;
+          name?: string;
+        };
         const displayName =
           parsed.name || (parsed.email ? parsed.email.split("@")[0] : "You");
         const avatarSeed = parsed.email || displayName;
 
         setCurrentUser({
-          id: 99,
+          id: parsed._id,
           name: displayName,
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
             avatarSeed
@@ -193,11 +218,19 @@ export default function ChatWindow() {
         const room = Array.isArray(data.room) ? data.room[0] : null;
 
         if (room) {
+          const members = (room.members || []).map((member: any) => ({
+            id: member._id,
+            name: member.name,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+              member.email
+            )}`,
+          }));
+
           setActiveRoom({
             id: room.roomId,
             title: room.title,
             description: room.description,
-            members: [],
+            members: members,
           });
 
           setMessages([]);
@@ -248,11 +281,14 @@ export default function ChatWindow() {
       id: Date.now(),
       userId: effectiveUser.id,
       content: messageText,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
       image: imagePreview || undefined,
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
     setMessageText("");
     setImagePreview(null);
   };
@@ -264,11 +300,14 @@ export default function ChatWindow() {
       id: Date.now(),
       userId: effectiveUser.id,
       content: code,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      type: 'code',
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      type: "code",
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
   };
 
   // --- Render Loading State ---
@@ -282,17 +321,46 @@ export default function ChatWindow() {
   }
 
   // --- Render Empty/Error State ---
-  if (!activeRoom) {
+
+if (!activeRoom) {
     return (
-      <div className="flex-1 flex items-center justify-center h-screen bg-[#060010] text-slate-500">
-        <p>Channel not found.</p>
+      <div className="w-full h-full flex flex-col items-center justify-center bg-[#060010] animate-in fade-in duration-500">
+        
+        {/* Centered Content Container */}
+        <div className="flex flex-col items-center text-center space-y-6">
+          
+          {/* 1. The Circular Button */}
+          <button 
+            onClick={() => navigate('/join-room')}
+            className="
+              group relative flex items-center justify-center
+              w-24 h-24 rounded-full cursor-pointer
+              bg-[#0A0514] border-2 border-white/5 
+              transition-all duration-300 ease-out
+              hover:border-indigo-500/50 hover:bg-[#110c1d]
+              hover:shadow-[0_0_30px_-5px_rgba(99,102,241,0.3)]
+              hover:-translate-y-2 active:scale-95
+            "
+          >
+            <Plus 
+              size={40} 
+              strokeWidth={1.5}
+              className="text-slate-600 transition-colors duration-300 group-hover:text-indigo-400" 
+            />
+          </button>
+          <div className="space-y-1">
+            <h3 className="text-xl font-medium text-white tracking-wide">
+              Join Room
+            </h3>
+            <p className="text-sm text-slate-500 font-light max-w-xs mx-auto">
+              OR navigate to the sidebar to see the channels you've joined
+            </p>
+          </div>
+
+        </div>
       </div>
     );
   }
-
-  // --- Render Main Chat ---
-  const effectiveUser = currentUser || MOCK_DB.user;
-  const allMembers = [effectiveUser, ...activeRoom.members];
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-[#060010] relative min-w-0">
@@ -400,35 +468,45 @@ export default function ChatWindow() {
                         {user.role}
                       </span>
                     )}
-                      <span className="text-xs text-slate-500 font-light ml-1">{msg.timestamp}</span>
-                    </div>
-                  )}
-                  {msg.type === 'code' ? (
-                    <div className="mt-2 bg-[#0A0514] border border-white/10 rounded-lg overflow-hidden">
-                      <pre className="p-4 text-sm text-slate-300 font-mono overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                        <code>{msg.content}</code>
-                      </pre>
-                    </div>
-                  ) : (
-                    <p className="text-slate-300 font-light leading-relaxed whitespace-pre-wrap">
-                      {msg.content}
-                    </p>
-                  )}
-                  {msg.image && (
-                    <div className="mt-2">
-                      <img src={msg.image} alt="uploaded content" className="rounded-lg max-w-xs" />
-                    </div>
-                  )}
-                </div>
+                    <span className="text-xs text-slate-500 font-light ml-1">
+                      {msg.timestamp}
+                    </span>
+                  </div>
+                )}
+                {msg.type === "code" ? (
+                  <div className="mt-2 bg-[#0A0514] border border-white/10 rounded-lg overflow-hidden">
+                    <pre className="p-4 text-sm text-slate-300 font-mono overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                      <code>{msg.content}</code>
+                    </pre>
+                  </div>
+                ) : (
+                  <p className="text-slate-300 font-light leading-relaxed whitespace-pre-wrap">
+                    {msg.content}
+                  </p>
+                )}
+                {msg.image && (
+                  <div className="mt-2">
+                    <img
+                      src={msg.image}
+                      alt="uploaded content"
+                      className="rounded-lg max-w-xs"
+                    />
+                  </div>
+                )}
               </div>
-            );
-          })}
-                      </div>
+            </div>
+          );
+        })}
+      </div>
       {/* Input Area */}
-<div className="px-6 pb-6 pt-2 bg-[#060010] relative">
+      <div className="px-6 pb-6 pt-2 bg-[#060010] relative">
         {imagePreview && (
           <div className="relative mb-2">
-            <img src={imagePreview} alt="preview" className="rounded-lg max-w-xs h-24" />
+            <img
+              src={imagePreview}
+              alt="preview"
+              className="rounded-lg max-w-xs h-24"
+            />
             <button
               onClick={() => setImagePreview(null)}
               className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/75"
@@ -437,83 +515,96 @@ export default function ChatWindow() {
             </button>
           </div>
         )}
-        <form 
+        <form
           onSubmit={handleSendMessage}
           className="bg-[#0A0514] rounded-full border-2 border-white/5 focus-within:border-indigo-500/30 transition-colors p-2 flex items-center gap-2"
         >
           <div className="relative" ref={attachmentMenuRef}>
-  <button 
-    type="button" 
-    onClick={() => setShowAttachmentMenu(prev => !prev)}
-    className={`
+            <button
+              type="button"
+              onClick={() => setShowAttachmentMenu((prev) => !prev)}
+              className={`
       p-2 rounded-full transition-all duration-300 ease-out
-      ${showAttachmentMenu 
-        ? 'bg-indigo-500/20 text-indigo-400 rotate-45' 
-        : 'text-slate-500 hover:text-indigo-400 hover:bg-white/5 rotate-0'}
+      ${
+        showAttachmentMenu
+          ? "bg-indigo-500/20 text-indigo-400 rotate-45"
+          : "text-slate-500 hover:text-indigo-400 hover:bg-white/5 rotate-0"
+      }
     `}
-  >
-    <Plus size={20} strokeWidth={2} />
-  </button>
+            >
+              <Plus size={20} strokeWidth={2} />
+            </button>
 
-  {showAttachmentMenu && (
-    <div className="
+            {showAttachmentMenu && (
+              <div
+                className="
       absolute bottom-full left-0 mb-3 w-48 
       bg-[#0A0514] border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-20
       origin-bottom-left
       animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ease-out
-    ">
-      <div className="p-1">
-        <button 
-          onClick={() => {
-            setIsCodeModalOpen(true);
-            setShowAttachmentMenu(false);
-          }}
-          className="w-full text-left px-3 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center gap-3 transition-colors"
-        >
-          <Code size={18} className="text-indigo-400" />
-          <span>Code Snippet</span>
-        </button>
-        <button 
-          onClick={() => {
-            setIsImageModalOpen(true);
-            setShowAttachmentMenu(false);
-          }}
-          className="w-full text-left px-3 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center gap-3 transition-colors"
-        >
-          <Image size={18} className="text-purple-400" />
-          <span>Upload Image</span>
-        </button>
-      </div>
-    </div>
-  )}
-</div>
-          
+    "
+              >
+                <div className="p-1">
+                  <button
+                    onClick={() => {
+                      setIsCodeModalOpen(true);
+                      setShowAttachmentMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center gap-3 transition-colors"
+                  >
+                    <Code size={18} className="text-indigo-400" />
+                    <span>Code Snippet</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsImageModalOpen(true);
+                      setShowAttachmentMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center gap-3 transition-colors"
+                  >
+                    <Image size={18} className="text-purple-400" />
+                    <span>Upload Image</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex-1 py-2">
-              <input 
-              type="text" 
+            <input
+              type="text"
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
               placeholder={`Message #${activeRoom.title}`}
               className="w-full bg-transparent border-none focus:outline-none text-slate-200 placeholder:text-slate-600 font-light ml-2"
-              />
+            />
           </div>
 
           <div className="flex items-center gap-1 pr-1 pb-1">
-              <button type="button" className="p-2 text-slate-500 hover:text-slate-300 transition-colors">
-                <Smile size={20} strokeWidth={1.5} />
-              </button>
-              <button 
+            <button
+              type="button"
+              className="p-2 text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              <Smile size={20} strokeWidth={1.5} />
+            </button>
+            <button
               type="submit"
               disabled={!messageText.trim() && !imagePreview}
               className={`
                 p-2.5 rounded-full flex items-center justify-center transition-all duration-300
-                ${(messageText.trim() || imagePreview)
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 translate-y-0' 
-                  : 'bg-[#1A1625] text-slate-600 translate-y-0 cursor-not-allowed'}
+                ${
+                  messageText.trim() || imagePreview
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 translate-y-0"
+                    : "bg-[#1A1625] text-slate-600 translate-y-0 cursor-not-allowed"
+                }
               `}
-              >
-                <Send size={18} strokeWidth={2} className={(messageText.trim() || imagePreview) ? 'ml-0.5' : ''} />
-              </button>
+            >
+              <Send
+                size={18}
+                strokeWidth={2}
+                className={messageText.trim() || imagePreview ? "ml-0.5" : ""}
+              />
+            </button>
           </div>
         </form>
       </div>
