@@ -145,6 +145,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [viewImage, setViewImage] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -222,7 +223,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
             id: member._id,
             name: member.name,
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-              member.email
+              member.name
             )}`,
           }));
 
@@ -376,6 +377,13 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
         onClose={() => setIsImageModalOpen(false)}
         onImageSelect={handleImageSelect}
       />
+      {viewImage && (
+        <ImageModal
+          isOpen={true}
+          onClose={() => setViewImage(null)}
+          imageUrl={viewImage}
+        />
+      )}
 
       {/* Dynamic Header */}
       <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-[#060010]/80 backdrop-blur-md sticky top-0 z-10">
@@ -394,7 +402,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsMemberModalOpen(true)}
-            className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all duration-200 group"
+            className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg cursor-pointer transition-all duration-200 group"
             title="View Members"
           >
             <Users size={20} strokeWidth={1.5} />
@@ -454,7 +462,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
                 {!isSequence && (
                   <div className="flex items-center gap-2 mb-1">
                     <span
-                      className={`font-medium hover:underline cursor-pointer ${
+                      className={`font-medium ${
                         isMe ? "text-indigo-400" : "text-slate-200"
                       }`}
                     >
@@ -486,7 +494,8 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
                     <img
                       src={msg.image}
                       alt="uploaded content"
-                      className="rounded-lg max-w-xs"
+                      className="rounded-lg max-w-xs cursor-pointer"
+                      onClick={() => setViewImage(msg.image as string)}
                     />
                   </div>
                 )}
