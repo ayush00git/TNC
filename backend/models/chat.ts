@@ -9,26 +9,25 @@ export interface IChat {
 }
 
 const chatSchema: Schema = new Schema({
-    sender: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    room: {
-      type: Schema.Types.ObjectId,
-      ref: 'Room',
-      required: true,
-      index: true,
-    },
-    text: {
-      type: String,
-      required: true,
-    },
-    imageURL: {
-      type: String,
-      default: " ",
-    },
+  sender: {
+    type: Schema.Types.ObjectId,
+    ref: 'Auth',
+    required: true,
   },
-{ timestamps: true });
+  room: {
+    type: Schema.Types.ObjectId,
+    ref: 'Room',
+    required: true,
+    index: true,
+  },
+  text: {
+    type: String,
+  },
+  imageURL: {
+    type: String,
+    default: " ",
+  },
+},
+  { timestamps: true });
 
 export default model<IChat>("Chat", chatSchema);

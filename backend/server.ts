@@ -16,7 +16,7 @@ import { roomRoute } from "./routes/room";
 import { allowOnlyAuthenticatedUser } from "./middlewares/auth";
 
 const app = express();
-app.use(cors());
+// app.use(cors()); // REMOVED: conflicting with specific cors config below
 
 const server = createServer(app);
 
@@ -24,15 +24,17 @@ const io = new Server(server, {
   cors: {
     origin: `http://localhost:5173`,
     methods: ["GET", "POST"],
+    credentials: true,
   }
 });
 
+app.set("io", io);
 socketSetup(io);
 
 const mongoUri = process.env.MONGO_URI;
 
-if(!mongoUri) {
-    throw new Error(`MONGO_URI is not present in the environment variables`);
+if (!mongoUri) {
+  throw new Error(`MONGO_URI is not present in the environment variables`);
 }
 
 connectToMongo(mongoUri)
@@ -50,13 +52,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.get("/", allowOnlyAuthenticatedUser ,(req, res) => {
+app.get("/", allowOnlyAuthenticatedUser, (req, res) => {
   return res
     .status(200)
     .json({ message: "Hey the server is in development phase" });
 });
 
-app.use('/api/chatRoom', allowOnlyAuthenticatedUser,chatRoute);
+app.use('/api/chat', allowOnlyAuthenticatedUser, chatRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/room', allowOnlyAuthenticatedUser, roomRoute);
 

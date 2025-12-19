@@ -1,9 +1,10 @@
 import express from "express";
-import { sendChat } from "../controllers/chat";
+import { sendChat, getChatHistory } from "../controllers/chat";
 import multer from "multer";
 
 export const chatRoute = express.Router();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-chatRoute.post('/', upload.single("image"), sendChat);
+chatRoute.post('/:roomId', upload.single("image"), sendChat);
+chatRoute.get('/chat-history/:roomId', getChatHistory);
