@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Send,
   Users,
   Hash,
   Plus,
@@ -11,7 +10,11 @@ import {
   Loader2,
   Code,
   Image,
+  Check,
+  AlertCircle,
+  ArrowUp,
 } from "lucide-react";
+import EmojiPicker, { Theme } from "emoji-picker-react";
 import CodeModal from "./CodeModal";
 import ImageModal from "./ImageModal";
 import { socket } from "../services/socket";
@@ -40,6 +43,8 @@ interface Message {
   timestamp?: string;
   type?: "text" | "code";
   image?: string;
+  status?: "sending" | "sent" | "error";
+  tempId?: string;
 }
 
 interface RoomDetails {
@@ -69,10 +74,12 @@ const MemberModal = ({
   isOpen,
   onClose,
   members,
+  currentUserId,
 }: {
   isOpen: boolean;
   onClose: () => void;
   members: User[];
+  currentUserId?: string;
 }) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -126,6 +133,9 @@ const MemberModal = ({
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
                     {member.name}
+                    {(member.id === currentUserId || member._id === currentUserId) && (
+                      <span className="text-slate-500 ml-1">(You)</span>
+                    )}
                   </span>
                   {member.role && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
@@ -159,12 +169,12 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
   const [viewImage, setViewImage] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [imagePreview, setImagePreview] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const attachmentMenuRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const allMembers = useMemo(() => {
     const members: User[] = activeRoom?.members ? [...activeRoom.members] : [];
@@ -174,24 +184,16 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
     return members;
   }, [activeRoom, currentUser]);
 
-  const effectiveUser = currentUser || MOCK_DB.user;
+  const effectiveUser: User = currentUser || MOCK_DB.user;
+  const effectiveUserRef = useRef(effectiveUser);
+
+  useEffect(() => {
+    effectiveUserRef.current = effectiveUser;
+  }, [effectiveUser]);
 
   const handleImageSelect = (dataUrl: string) => {
-    // This is receiving a dataURL string from the modal
-    // For actual upload we need a File object. 
-    // Converting dataURL to Blob/File if needed or updating ImageModal to return File. 
-    // Assuming ImageModal returns base64 string for now, we'll need to adapt it.
-    // Ideally, ImageModal should return the File object.
-    // For now, let's assume we can't easily get the File object back from dataUrl without conversion.
-    // BUT, let's reset this flow:
-    // We will just use the preview for now and let the user send it. 
-    // Wait, the ImageModal implementation in this codebase seems to handle reading file.
-    // Let's assume for this integration we just want to get the file.
-    // I'll update the state to store the string for preview.
-    setImagePreviewUrl(dataUrl);
 
-    // We need the File object to upload. 
-    // Since I can't change ImageModal right now without seeing it, I'll fetch the blob from the dataURL.
+    setImagePreviewUrl(dataUrl);
     fetch(dataUrl)
       .then(res => res.blob())
       .then(blob => {
@@ -286,6 +288,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
               minute: "2-digit",
             }),
             image: msg.imageURL && msg.imageURL.trim() !== "" ? msg.imageURL : undefined,
+            status: "sent",
           }));
 
           setMessages(history);
@@ -313,8 +316,24 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
           minute: "2-digit",
         }),
         image: newMessage.imageURL && newMessage.imageURL.trim() !== "" ? newMessage.imageURL : undefined,
+        status: "sent",
       };
-      setMessages((prev) => [...prev, formattedMsg]);
+
+      setMessages((prev) => {
+        // If this message belongs to current user, try to find the optimistic one
+        const currentUserId = effectiveUserRef.current.id || effectiveUserRef.current._id;
+        if (formattedMsg.userId === currentUserId) {
+          const existingIndex = prev.findIndex(
+            (m) => m.status === "sending" && (m.content === formattedMsg.content)
+          );
+          if (existingIndex !== -1) {
+            const newMessages = [...prev];
+            newMessages[existingIndex] = formattedMsg;
+            return newMessages;
+          }
+        }
+        return [...prev, formattedMsg];
+      });
     };
 
     socket.on("received_message", handleReceiveMessage);
@@ -336,6 +355,12 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
       ) {
         setShowAttachmentMenu(false);
       }
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -355,12 +380,33 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
     e?.preventDefault();
     if ((!messageText.trim() && !imagePreview) || !roomId) return;
 
-    // Optimistic UI update could be done here, but waiting for server/socket is safer for syncing
-
     if (!activeRoom?._id) return;
 
+    const tempId = Date.now().toString();
+    const optimisticMessage: Message = {
+      _id: tempId,
+      id: tempId,
+      tempId: tempId,
+      sender: effectiveUser,
+      text: messageText,
+      content: messageText,
+      createdAt: new Date().toISOString(),
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      status: "sending",
+      room: activeRoom._id,
+      userId: effectiveUser.id || effectiveUser._id,
+      image: imagePreviewUrl || undefined
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+
+    // Clear input immediately
+    setMessageText("");
+    setImagePreview(null);
+    setImagePreviewUrl(null);
+
     const formData = new FormData();
-    formData.append("text", messageText);
+    formData.append("text", optimisticMessage.content || "");
     formData.append("room", activeRoom._id);
     if (imagePreview) {
       formData.append("image", imagePreview);
@@ -371,13 +417,14 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      // Clear input
-      setMessageText("");
-      setImagePreview(null);
-      setImagePreviewUrl(null);
+      // Success is handled by socket event "received_message" which will replace the optimistic message
     } catch (error) {
       console.error("Failed to send message:", error);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.tempId === tempId ? { ...msg, status: "error" } : msg
+        )
+      );
     }
   };
 
@@ -456,6 +503,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
         isOpen={isMemberModalOpen}
         onClose={() => setIsMemberModalOpen(false)}
         members={allMembers}
+        currentUserId={effectiveUser.id || effectiveUser._id}
       />
       <CodeModal
         isOpen={isCodeModalOpen}
@@ -561,7 +609,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
                       className={`font-medium ${isMe ? "text-indigo-400" : "text-slate-200"
                         }`}
                     >
-                      {user.name}
+                      {user.name} {isMe && <span className="opacity-50">(You)</span>}
                     </span>
                     {user.role && (
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1A1625] text-slate-400 border border-white/5">
@@ -593,6 +641,19 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
                       className="rounded-lg max-w-xs cursor-pointer"
                       onClick={() => setViewImage(msg.image as string)}
                     />
+                  </div>
+                )}
+                {isMe && (
+                  <div className="flex justify-end mt-1">
+                    {msg.status === "sending" && (
+                      <div className="flex space-x-0.5 animate-pulse">
+                        <div className="w-1 h-1 bg-slate-500 rounded-full animation-delay-[0ms]" />
+                        <div className="w-1 h-1 bg-slate-500 rounded-full animation-delay-[100ms]" />
+                        <div className="w-1 h-1 bg-slate-500 rounded-full animation-delay-[200ms]" />
+                      </div>
+                    )}
+                    {msg.status === "sent" && <Check className="w-3 h-3 text-slate-500" />}
+                    {msg.status === "error" && <AlertCircle className="w-3 h-3 text-red-500" />}
                   </div>
                 )}
               </div>
@@ -629,7 +690,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
               type="button"
               onClick={() => setShowAttachmentMenu((prev) => !prev)}
               className={`
-      p-2 rounded-full transition-all duration-300 ease-out
+      p-2 rounded-full transition-all duration-300 ease-out cursor-pointer
       ${showAttachmentMenu
                   ? "bg-indigo-500/20 text-indigo-400 rotate-45"
                   : "text-slate-500 hover:text-indigo-400 hover:bg-white/5 rotate-0"
@@ -684,28 +745,42 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
             />
           </div>
 
-          <div className="flex items-center gap-1 pr-1 pb-1">
+          <div className="flex items-center gap-1 pr-1 pb-1 relative" ref={emojiPickerRef}>
             <button
               type="button"
-              className="p-2 text-slate-500 hover:text-slate-300 transition-colors"
+              onClick={() => setShowEmojiPicker((prev) => !prev)}
+              className="p-2 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
             >
               <Smile size={20} strokeWidth={1.5} />
             </button>
+            {showEmojiPicker && (
+              <div className="absolute bottom-full right-0 mb-4 z-50 shadow-2xl rounded-2xl overflow-hidden border border-white/10 animate-in fade-in zoom-in-95 duration-200">
+                <EmojiPicker
+                  theme={Theme.DARK}
+                  onEmojiClick={(emojiData) => {
+                    setMessageText((prev) => prev + emojiData.emoji);
+                    setShowEmojiPicker(false);
+                  }}
+                  width={320}
+                  height={400}
+                />
+              </div>
+            )}
             <button
               type="submit"
               disabled={!messageText.trim() && !imagePreviewUrl}
               className={`
-                p-2.5 rounded-full flex items-center justify-center transition-all duration-300
+                p-2.5 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer
                 ${messageText.trim() || imagePreviewUrl
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 translate-y-0"
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 translate-y-0 hover:bg-indigo-500"
                   : "bg-[#1A1625] text-slate-600 translate-y-0 cursor-not-allowed"
                 }
               `}
             >
-              <Send
-                size={18}
-                strokeWidth={2}
-                className={messageText.trim() || imagePreviewUrl ? "ml-0.5" : ""}
+              <ArrowUp
+                size={20}
+                strokeWidth={2.5}
+                className={messageText.trim() || imagePreviewUrl ? "" : ""}
               />
             </button>
           </div>
