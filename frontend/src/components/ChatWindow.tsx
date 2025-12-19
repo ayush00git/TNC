@@ -161,6 +161,8 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [imagePreview, setImagePreview] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const attachmentMenuRef = useRef<HTMLDivElement>(null);
 
