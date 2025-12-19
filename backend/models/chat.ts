@@ -2,22 +2,33 @@ import { Schema, model, Types } from "mongoose";
 
 export interface IChat {
   _id: Types.ObjectId,
+  sender: Types.ObjectId,
+  room: Types.ObjectId,
   text: string;
   imageURL: string;
 }
 
-const chatSchema: Schema = new Schema(
-  {
+const chatSchema: Schema = new Schema({
+    sender: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    room: {
+      type: Schema.Types.ObjectId,
+      ref: 'Room',
+      required: true,
+      index: true,
+    },
     text: {
       type: String,
-      default: " ",
+      required: true,
     },
     imageURL: {
       type: String,
       default: " ",
     },
   },
-  { timestamps: true }
-);
+{ timestamps: true });
 
 export default model<IChat>("Chat", chatSchema);
