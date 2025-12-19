@@ -35,7 +35,7 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
     await newUser.save();
     verifyAcc(newUser);
 
-    return res.status(200).json({ message: "Email sent for verification" });
+    return res.status(200).json({ message: "Email has been sent for account verification Check your inbox" });
   } catch (error) {
     console.log(`While signing up`);
     throw new Error(`While creating a new User`);
