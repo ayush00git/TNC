@@ -14,26 +14,37 @@ import {
 } from "lucide-react";
 import CodeModal from "./CodeModal";
 import ImageModal from "./ImageModal";
+import { socket } from "../services/socket";
+import axios from "axios";
 
 // --- Types ---
 interface User {
   id: string;
+  _id?: string;
   name: string;
   avatar: string;
   role?: string;
 }
 
 interface Message {
-  id: number;
-  userId: string;
-  content: string;
-  timestamp: string;
+  _id: string;
+  sender: User;
+  text: string;
+  createdAt: string;
+  room?: string;
+  imageURL?: string;
+  // Compatibility with UI
+  id?: number | string;
+  userId?: string;
+  content?: string;
+  timestamp?: string;
   type?: "text" | "code";
   image?: string;
 }
 
 interface RoomDetails {
   id: string;
+  _id: string;
   title: string;
   description: string;
   members: User[];
@@ -43,7 +54,7 @@ interface ChatWindowProps {
   roomId?: string;
 }
 
-// --- Mock Database (used for current user only) ---
+// --- Mock Database (used for fallback) ---
 const MOCK_DB = {
   user: {
     id: "99",
@@ -148,7 +159,8 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
   const [viewImage, setViewImage] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const attachmentMenuRef = useRef<HTMLDivElement>(null);
 
@@ -163,11 +175,32 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
   const effectiveUser = currentUser || MOCK_DB.user;
 
   const handleImageSelect = (dataUrl: string) => {
-    setImagePreview(dataUrl);
+    // This is receiving a dataURL string from the modal
+    // For actual upload we need a File object. 
+    // Converting dataURL to Blob/File if needed or updating ImageModal to return File. 
+    // Assuming ImageModal returns base64 string for now, we'll need to adapt it.
+    // Ideally, ImageModal should return the File object.
+    // For now, let's assume we can't easily get the File object back from dataUrl without conversion.
+    // BUT, let's reset this flow:
+    // We will just use the preview for now and let the user send it. 
+    // Wait, the ImageModal implementation in this codebase seems to handle reading file.
+    // Let's assume for this integration we just want to get the file.
+    // I'll update the state to store the string for preview.
+    setImagePreviewUrl(dataUrl);
+
+    // We need the File object to upload. 
+    // Since I can't change ImageModal right now without seeing it, I'll fetch the blob from the dataURL.
+    fetch(dataUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], "upload.png", { type: "image/png" });
+        setImagePreview(file);
+      });
+
     setIsImageModalOpen(false);
   };
 
-  // Load authenticated user (stored by LoginPage) for chat UI
+  // Load authenticated user
   useEffect(() => {
     try {
       const raw = localStorage.getItem("authUser");
@@ -196,6 +229,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
     }
   }, []);
 
+  // Fetch Room & Messages
   useEffect(() => {
     if (!roomId) {
       setActiveRoom(null);
@@ -205,21 +239,16 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
 
     setIsLoading(true);
 
-    const fetchRoom = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch(`http://localhost:8001/api/room/${roomId}`, {
-          credentials: "include",
+        // 1. Fetch Room Details
+        const roomRes = await axios.get(`http://localhost:8001/api/room/${roomId}`, {
+          withCredentials: true,
         });
 
-        if (!res.ok) {
-          throw new Error(`Failed to fetch room: ${res.status}`);
-        }
-
-        const data = await res.json();
-        const room = Array.isArray(data.room) ? data.room[0] : null;
-
-        if (room) {
-          const members = (room.members || []).map((member: any) => ({
+        const roomData = roomRes.data.room[0];
+        if (roomData) {
+          const members = (roomData.members || []).map((member: any) => ({
             id: member._id,
             name: member.name,
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
@@ -228,25 +257,73 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
           }));
 
           setActiveRoom({
-            id: room.roomId,
-            title: room.title,
-            description: room.description,
+            id: roomData.roomId,
+            _id: roomData._id,
+            title: roomData.title,
+            description: roomData.description,
             members: members,
           });
 
-          setMessages([]);
-        } else {
-          setActiveRoom(null);
+          // 2. Fetch Chat History using the ObjectId
+          const messagesRes = await axios.get(`http://localhost:8001/api/chat/chat-history/${roomData._id}?page=1`, {
+            withCredentials: true,
+          });
+
+          // Socket Connection using ObjectId
+          socket.connect();
+          socket.emit("join_room", roomData._id);
+
+          // Transform backend messages to UI format
+          const history = messagesRes.data.map((msg: Message) => ({
+            ...msg,
+            id: msg._id,
+            userId: msg.sender._id,
+            content: msg.text,
+            timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            image: msg.imageURL && msg.imageURL.trim() !== "" ? msg.imageURL : undefined,
+          }));
+
+          setMessages(history);
+
         }
       } catch (err) {
-        console.error(err);
-        setActiveRoom(null);
+        console.error("Error fetching data:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchRoom();
+    fetchData();
+
+    // Socket connection moved inside fetchData to use roomData._id
+
+    const handleReceiveMessage = (newMessage: any) => {
+      const formattedMsg: Message = {
+        ...newMessage,
+        id: newMessage._id,
+        userId: newMessage.sender._id,
+        content: newMessage.text,
+        timestamp: new Date(newMessage.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        image: newMessage.imageURL && newMessage.imageURL.trim() !== "" ? newMessage.imageURL : undefined,
+      };
+      setMessages((prev) => [...prev, formattedMsg]);
+    };
+
+    socket.on("received_message", handleReceiveMessage);
+    // Listen for the event name used in the controller code (user used 'receive_message' in their edit)
+    socket.on("receive_message", handleReceiveMessage);
+
+    return () => {
+      socket.off("received_message", handleReceiveMessage);
+      socket.off("receive_message", handleReceiveMessage);
+      socket.disconnect();
+    };
   }, [roomId]);
 
   useEffect(() => {
@@ -272,43 +349,54 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
     }
   }, [messages, isLoading]);
 
-  const handleSendMessage = (e?: React.FormEvent) => {
+  const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!messageText.trim() && !imagePreview) return;
+    if ((!messageText.trim() && !imagePreview) || !roomId) return;
 
-    const effectiveUser = currentUser || MOCK_DB.user;
+    // Optimistic UI update could be done here, but waiting for server/socket is safer for syncing
 
-    const newMessage: Message = {
-      id: Date.now(),
-      userId: effectiveUser.id,
-      content: messageText,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      image: imagePreview || undefined,
-    };
+    if (!activeRoom?._id) return;
 
-    setMessages((prev) => [...prev, newMessage]);
-    setMessageText("");
-    setImagePreview(null);
+    const formData = new FormData();
+    formData.append("text", messageText);
+    formData.append("room", activeRoom._id);
+    if (imagePreview) {
+      formData.append("image", imagePreview);
+    }
+
+    try {
+      await axios.post(`http://localhost:8001/api/chat/${activeRoom._id}`, formData, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      // Clear input
+      setMessageText("");
+      setImagePreview(null);
+      setImagePreviewUrl(null);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
   };
 
-  const handleShareCode = (code: string) => {
-    const effectiveUser = currentUser || MOCK_DB.user;
+  const handleShareCode = async (code: string) => {
+    if (!roomId) return;
 
-    const newMessage: Message = {
-      id: Date.now(),
-      userId: effectiveUser.id,
-      content: code,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      type: "code",
-    };
+    // Sending code as a regular message but marked as code? 
+    // The backend model doesn't seem to have a 'type' field yet. 
+    // We will send it as text for now.
+    try {
+      const formData = new FormData();
+      formData.append("text", code); // You might want to wrap this in markdown code blocks like ```{code}```
+      formData.append("room", activeRoom!._id);
 
-    setMessages((prev) => [...prev, newMessage]);
+      await axios.post(`http://localhost:8001/api/chat/${activeRoom!._id}`, formData, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error) {
+      console.error("Failed to share code:", error);
+    }
   };
 
   // --- Render Loading State ---
@@ -431,30 +519,36 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
         </div>
 
         {messages.map((msg, idx) => {
-          const user =
-            allMembers.find((m) => m.id === msg.userId) || effectiveUser;
-          const isMe = msg.userId === effectiveUser.id;
+          // Adjust user lookup for real data structure
+          const user = msg.sender || effectiveUser;
+          // IMPORTANT: Check ID types (string vs number)
+          const isMe = user.id === effectiveUser.id || user._id === effectiveUser.id;
+
           const prevMsg = messages[idx - 1];
-          const isSequence = prevMsg && prevMsg.userId === msg.userId;
+          // Check sender ID consistency
+          const prevSenderId = prevMsg?.sender?.id || prevMsg?.sender?._id || prevMsg?.userId;
+          const currentSenderId = user.id || user._id;
+          const isSequence = prevMsg && prevSenderId === currentSenderId;
+
+          const avatarUrl = user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || "User")}`;
 
           return (
             <div
               key={msg.id}
-              className={`group flex gap-4 ${
-                isSequence ? "mt-1" : "mt-6"
-              } hover:bg-white/[0.02] -mx-4 px-4 py-1 rounded-lg transition-colors`}
+              className={`group flex gap-4 ${isSequence ? "mt-1" : "mt-6"
+                } hover:bg-white/[0.02] -mx-4 px-4 py-1 rounded-lg transition-colors`}
             >
               {!isSequence ? (
                 <div className="flex-shrink-0 mt-0.5">
                   <img
-                    src={user.avatar}
+                    src={avatarUrl}
                     alt={user.name}
                     className="w-10 h-10 rounded-xl bg-slate-800"
                   />
                 </div>
               ) : (
                 <div className="w-10 flex-shrink-0 text-[10px] text-slate-600 opacity-0 group-hover:opacity-100 text-right pt-2 select-none">
-                  {msg.timestamp.split(" ")[0]}
+                  {msg.timestamp?.split(" ")[0]}
                 </div>
               )}
 
@@ -462,9 +556,8 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
                 {!isSequence && (
                   <div className="flex items-center gap-2 mb-1">
                     <span
-                      className={`font-medium ${
-                        isMe ? "text-indigo-400" : "text-slate-200"
-                      }`}
+                      className={`font-medium ${isMe ? "text-indigo-400" : "text-slate-200"
+                        }`}
                     >
                       {user.name}
                     </span>
@@ -478,15 +571,16 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
                     </span>
                   </div>
                 )}
+                {/* Check content vs text field */}
                 {msg.type === "code" ? (
                   <div className="mt-2 bg-[#0A0514] border border-white/10 rounded-lg overflow-hidden">
                     <pre className="p-4 text-sm text-slate-300 font-mono overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                      <code>{msg.content}</code>
+                      <code>{msg.content || msg.text}</code>
                     </pre>
                   </div>
                 ) : (
                   <p className="text-slate-300 font-light leading-relaxed whitespace-pre-wrap">
-                    {msg.content}
+                    {msg.content || msg.text}
                   </p>
                 )}
                 {msg.image && (
@@ -506,15 +600,18 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
       </div>
       {/* Input Area */}
       <div className="px-6 pb-6 pt-2 bg-[#060010] relative">
-        {imagePreview && (
+        {imagePreviewUrl && (
           <div className="relative mb-2">
             <img
-              src={imagePreview}
+              src={imagePreviewUrl}
               alt="preview"
               className="rounded-lg max-w-xs h-24"
             />
             <button
-              onClick={() => setImagePreview(null)}
+              onClick={() => {
+                setImagePreview(null);
+                setImagePreviewUrl(null);
+              }}
               className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/75"
             >
               <X size={16} />
@@ -531,11 +628,10 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
               onClick={() => setShowAttachmentMenu((prev) => !prev)}
               className={`
       p-2 rounded-full transition-all duration-300 ease-out
-      ${
-        showAttachmentMenu
-          ? "bg-indigo-500/20 text-indigo-400 rotate-45"
-          : "text-slate-500 hover:text-indigo-400 hover:bg-white/5 rotate-0"
-      }
+      ${showAttachmentMenu
+                  ? "bg-indigo-500/20 text-indigo-400 rotate-45"
+                  : "text-slate-500 hover:text-indigo-400 hover:bg-white/5 rotate-0"
+                }
     `}
             >
               <Plus size={20} strokeWidth={2} />
@@ -595,20 +691,19 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
             </button>
             <button
               type="submit"
-              disabled={!messageText.trim() && !imagePreview}
+              disabled={!messageText.trim() && !imagePreviewUrl}
               className={`
                 p-2.5 rounded-full flex items-center justify-center transition-all duration-300
-                ${
-                  messageText.trim() || imagePreview
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 translate-y-0"
-                    : "bg-[#1A1625] text-slate-600 translate-y-0 cursor-not-allowed"
+                ${messageText.trim() || imagePreviewUrl
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 translate-y-0"
+                  : "bg-[#1A1625] text-slate-600 translate-y-0 cursor-not-allowed"
                 }
               `}
             >
               <Send
                 size={18}
                 strokeWidth={2}
-                className={messageText.trim() || imagePreview ? "ml-0.5" : ""}
+                className={messageText.trim() || imagePreviewUrl ? "ml-0.5" : ""}
               />
             </button>
           </div>
