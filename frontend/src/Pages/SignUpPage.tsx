@@ -9,6 +9,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/NavBar";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -90,7 +91,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-[#060010] text-slate-200 font-sans flex flex-col items-center justify-center p-6 relative overflow-hidden">
-
+      <Navbar />
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-10">

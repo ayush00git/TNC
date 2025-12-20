@@ -175,6 +175,9 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const attachmentMenuRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const optionsMenuRef = useRef<HTMLDivElement>(null);
+
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
   const allMembers = useMemo(() => {
     const members: User[] = activeRoom?.members ? [...activeRoom.members] : [];
@@ -361,6 +364,12 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
       ) {
         setShowEmojiPicker(false);
       }
+      if (
+        optionsMenuRef.current &&
+        !optionsMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowOptionsMenu(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -545,9 +554,31 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
           >
             <Users size={20} strokeWidth={1.5} />
           </button>
-          <button className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200">
-            <MoreHorizontal size={20} strokeWidth={1.5} />
-          </button>
+          <div className="relative" ref={optionsMenuRef}>
+            <button
+              onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+              className={`p-2 rounded-lg cursor-pointer transition-all duration-200 ${showOptionsMenu
+                  ? "bg-white/5 text-white"
+                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                }`}
+            >
+              <MoreHorizontal size={20} strokeWidth={1.5} />
+            </button>
+            {showOptionsMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-[#0A0514] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                <a
+                  href="https://github.com/ayush00git/TNC/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+                  onClick={() => setShowOptionsMenu(false)}
+                >
+                  <AlertCircle size={16} className="text-red-400" />
+                  Report an issue
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

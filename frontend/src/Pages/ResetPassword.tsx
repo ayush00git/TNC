@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ShieldCheck, ArrowRight, CheckCircle2, XCircle } from "lucide-react";
+import Navbar from "../components/NavBar";
 
 export default function ResetPassword() {
     const [searchParams] = useSearchParams();
@@ -69,7 +70,7 @@ export default function ResetPassword() {
 
     return (
         <div className="min-h-screen bg-[#060010] text-slate-200 font-sans flex flex-col items-center justify-center p-6 relative overflow-hidden">
-
+            <Navbar />
             <div className="w-full max-w-md relative z-10">
 
                 <div className="bg-[#0A0514] border border-white/10 rounded-3xl p-8 shadow-2xl relative">

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CheckCircle2, XCircle, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
+import Navbar from "../components/NavBar";
 
 export default function VerifyEmail() {
     const [searchParams] = useSearchParams();
@@ -19,8 +20,6 @@ export default function VerifyEmail() {
             }
 
             try {
-                // Simulating API call for design preview purposes if localhost isn't running
-                // In production, keep your actual fetch logic
                 const res = await fetch(`http://localhost:8001/api/auth/verify-acc?hash=${hash}`, {
                     method: "GET",
                 });
@@ -46,7 +45,7 @@ export default function VerifyEmail() {
 
     return (
         <div className="min-h-screen bg-[#060010] text-slate-200 font-sans flex flex-col items-center justify-center p-6 relative overflow-hidden">
-            
+            <Navbar />
             <div className="w-full max-w-md relative z-10">
                 
                 {/* Main Card - Removed Gradients/Glows */}

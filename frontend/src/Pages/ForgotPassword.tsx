@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Key, ArrowRight, ShieldCheck, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import Navbar from '../components/NavBar';
+import Footer from '../components/Footer';
 // import { Link } from 'react-router-dom'; // TODO: Uncomment for routing
 
 type Tab = 'viaOldPass' | 'viaEmail';
@@ -78,7 +80,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-[#060010] text-slate-200 font-sans flex flex-col items-center justify-center p-6 relative overflow-hidden">
-
+      <Navbar />
       <div className="w-full max-w-md relative z-10">
 
         {/* Header */}
@@ -279,8 +281,7 @@ export default function ForgotPassword() {
             ← Back to Login
           </a>
         </div>
-
       </div>
-    </div>
+    </div>    
   );
 }

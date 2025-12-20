@@ -10,6 +10,8 @@ import {
   Hash,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/NavBar";
+import Footer from "../components/Footer";
 // Interface for type safety
 interface Room {
   id: number;
@@ -264,7 +266,8 @@ const JoinActiveRoom = () => {
   return (
     <div className="min-h-screen bg-[#060010] text-slate-200 font-sans selection:bg-indigo-500/30">
       {/* Header Section */}
-      <div className="max-w-7xl mx-auto px-6 pt-20 pb-12 text-center">
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-6 pt-20 pb-12 mt-8 text-center">
         <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-500 tracking-tight mb-4">
           Active Rooms
         </h1>
@@ -288,6 +291,7 @@ const JoinActiveRoom = () => {
         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-900/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-purple-900/5 rounded-full blur-[120px]" />
       </div>
+      <Footer />
     </div>
   );
 };
