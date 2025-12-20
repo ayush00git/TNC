@@ -4,6 +4,8 @@ import { Routes, Route } from "react-router-dom";
 import SignUpPage from "./Pages/SignUpPage";
 import LoginPage from "./Pages/LoginPage";
 import ForgotPassword from "./Pages/ForgotPassword";
+import VerifyEmail from "./Pages/VerifyEmail";
+import ResetPassword from "./Pages/ResetPassword";
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
         <Route path="/join-room" element={<JoinActiveRoom />} />
         <Route path="/room" element={<ChatInterface />} />
         <Route path="/room/:roomId" element={<ChatInterface />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </>
   );

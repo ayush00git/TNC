@@ -281,7 +281,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
           const history = messagesRes.data.map((msg: Message) => ({
             ...msg,
             id: msg._id,
-            userId: msg.sender._id,
+            userId: msg.sender ? msg.sender._id : "unknown",
             content: msg.text,
             timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
               hour: "2-digit",
@@ -309,7 +309,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
       const formattedMsg: Message = {
         ...newMessage,
         id: newMessage._id,
-        userId: newMessage.sender._id,
+        userId: newMessage.sender ? newMessage.sender._id : "unknown",
         content: newMessage.text,
         timestamp: new Date(newMessage.createdAt).toLocaleTimeString([], {
           hour: "2-digit",
@@ -570,9 +570,15 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
 
         {messages.map((msg, idx) => {
           // Adjust user lookup for real data structure
-          const user = msg.sender || effectiveUser;
+          const user = msg.sender || {
+            id: "unknown",
+            _id: "unknown",
+            name: "Unknown User",
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Unknown`,
+          };
+
           // IMPORTANT: Check ID types (string vs number)
-          const isMe = user.id === effectiveUser.id || user._id === effectiveUser.id;
+          const isMe = (user.id === effectiveUser.id || user._id === effectiveUser.id) && user.id !== "unknown";
 
           const prevMsg = messages[idx - 1];
           // Check sender ID consistency
