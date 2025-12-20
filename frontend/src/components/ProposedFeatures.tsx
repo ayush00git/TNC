@@ -115,7 +115,7 @@ export default function ProposedFeatures() {
               TNC is open source. You can propose features or contribute directly to the codebase on GitHub.
             </p>
             <a 
-              href="https://github.com/ayush00git/TNC" 
+              href="https://github.com/ayush00git/TNC/pulls" 
               target="_blank" 
               rel="noopener noreferrer"
               className="mt-2 px-6 py-3 rounded-full bg-[#0A0514] border border-white/10 hover:bg-white/5 text-sm font-medium transition-colors text-white"

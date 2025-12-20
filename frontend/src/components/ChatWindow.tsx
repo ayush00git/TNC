@@ -81,6 +81,8 @@ const MemberModal = ({
   members: User[];
   currentUserId?: string;
 }) => {
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -96,6 +98,16 @@ const MemberModal = ({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose]);
+
+  const handleInvite = async () => {
+    try {
+      await navigator.clipboard.writeText("http://localhost:5173");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy invite link", err);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -148,8 +160,18 @@ const MemberModal = ({
           ))}
         </div>
         <div className="px-6 py-4 border-t border-white/5 bg-[#080412]">
-          <button className="w-full py-2.5 rounded-lg bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors">
-            Invite People
+          <button
+            onClick={handleInvite}
+            className="w-full py-2.5 rounded-lg bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+          >
+            {copied ? (
+              <>
+                <Check size={16} className="text-emerald-400" />
+                <span className="text-emerald-400">Copied Link!</span>
+              </>
+            ) : (
+              "Invite People"
+            )}
           </button>
         </div>
       </div>
@@ -558,8 +580,8 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
             <button
               onClick={() => setShowOptionsMenu(!showOptionsMenu)}
               className={`p-2 rounded-lg cursor-pointer transition-all duration-200 ${showOptionsMenu
-                  ? "bg-white/5 text-white"
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                ? "bg-white/5 text-white"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
                 }`}
             >
               <MoreHorizontal size={20} strokeWidth={1.5} />
