@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Cpu, Cloud, Palette, Layout, Server, Hash, X, Menu } from "lucide-react";
+import { Box, Cpu, Cloud, Palette, Layout, Server, Hash, Menu } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // --- Types ---
