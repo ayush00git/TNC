@@ -13,6 +13,7 @@ import {
   Check,
   AlertCircle,
   ArrowUp,
+  Menu,
 } from "lucide-react";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import CodeModal from "./CodeModal";
@@ -57,6 +58,7 @@ interface RoomDetails {
 
 interface ChatWindowProps {
   roomId?: string;
+  onOpenSidebar?: () => void;
 }
 
 // --- Mock Database (used for fallback) ---
@@ -179,7 +181,7 @@ const MemberModal = ({
   );
 };
 
-export default function ChatWindow({ roomId }: ChatWindowProps) {
+export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [activeRoom, setActiveRoom] = useState<RoomDetails | null>(null);
@@ -557,6 +559,12 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
       {/* Dynamic Header */}
       <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-[#060010]/80 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3">
+          <button
+            onClick={onOpenSidebar}
+            className="md:hidden p-1 -ml-2 mr-1 text-slate-400 hover:text-white transition-colors"
+          >
+            <Menu size={20} />
+          </button>
           <Hash className="w-5 h-5 text-slate-400" />
           <div>
             <h2 className="font-semibold text-white tracking-wide">
