@@ -54,9 +54,6 @@ export default function RoomSidebar() {
           const slugs = (data.rooms || []).map(
             (room: { roomId: string }) => room.roomId
           );
-
-          console.log("Fetched joined rooms from API:", slugs); // Debug log
-
           // Update state and cache
           setJoinedSlugs(slugs);
           localStorage.setItem("joinedRooms", JSON.stringify(slugs));
@@ -80,21 +77,6 @@ export default function RoomSidebar() {
     );
   });
 
-  // Debug: log what we're matching
-  useEffect(() => {
-    if (joinedSlugs.length > 0) {
-      console.log("Joined slugs from API/cache:", joinedSlugs);
-      console.log(
-        "Available ROOMS slugs:",
-        ROOMS.map((r) => r.slug)
-      );
-      console.log(
-        "Filtered joined rooms:",
-        joinedRooms.map((r) => r.slug)
-      );
-    }
-  }, [joinedSlugs]);
-
   // Logic to determine which tab is active based on the current URL path
   const activeIndex = joinedRooms.findIndex((room) =>
     currentPath.includes(room.slug)
@@ -104,7 +86,6 @@ export default function RoomSidebar() {
 
   const handleNavigation = (slug: string) => {
     const targetPath = `/room/${slug}`;
-    console.log(`Navigating to: ${targetPath}`);
     navigate(targetPath);
   };
 
