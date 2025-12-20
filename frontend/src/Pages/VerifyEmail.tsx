@@ -20,7 +20,7 @@ export default function VerifyEmail() {
             }
 
             try {
-                const res = await fetch(`http://localhost:8001/api/auth/verify-acc?hash=${hash}`, {
+                const res = await fetch(`/api/auth/verify-acc?hash=${hash}`, {
                     method: "GET",
                 });
 

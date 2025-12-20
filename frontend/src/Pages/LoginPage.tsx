@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   const fetchAndNavigate = async () => {
     try {
-      const res = await fetch("http://localhost:8001/api/rooms", {
+      const res = await fetch("/api/rooms", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -56,7 +56,7 @@ export default function LoginPage() {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch("http://localhost:8001/api/auth/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

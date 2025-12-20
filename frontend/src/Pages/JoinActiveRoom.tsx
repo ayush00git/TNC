@@ -91,7 +91,7 @@ const ChatRoomCard = ({ room }: { room: Room }) => {
     setJoinError(null);
     try {
       setIsJoining(true);
-      const res = await fetch(`http://localhost:8001/api/room/${slug}/join`, {
+      const res = await fetch(`/api/room/${slug}/join`, {
         method: "GET",
         credentials: "include",
       });
@@ -118,7 +118,7 @@ const ChatRoomCard = ({ room }: { room: Room }) => {
       // Refresh joined rooms from API to sync cache with backend (await to ensure cache is updated)
       try {
         const refreshRes = await fetch(
-          "http://localhost:8001/api/room/joined",
+          "/api/room/joined",
           {
             credentials: "include",
           }

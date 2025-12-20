@@ -271,7 +271,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
     const fetchData = async () => {
       try {
         // 1. Fetch Room Details
-        const roomRes = await axios.get(`http://localhost:8001/api/room/${roomId}`, {
+        const roomRes = await axios.get(`/api/room/${roomId}`, {
           withCredentials: true,
         });
 
@@ -294,7 +294,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
           });
 
           // 2. Fetch Chat History using the ObjectId
-          const messagesRes = await axios.get(`http://localhost:8001/api/chat/chat-history/${roomData._id}?page=1`, {
+          const messagesRes = await axios.get(`/api/chat/chat-history/${roomData._id}?page=1`, {
             withCredentials: true,
           });
 
@@ -444,7 +444,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
     }
 
     try {
-      await axios.post(`http://localhost:8001/api/chat/${activeRoom._id}`, formData, {
+      await axios.post(`/api/chat/${activeRoom._id}`, formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -470,7 +470,7 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
       formData.append("text", code); // You might want to wrap this in markdown code blocks like ```{code}```
       formData.append("room", activeRoom!._id);
 
-      await axios.post(`http://localhost:8001/api/chat/${activeRoom!._id}`, formData, {
+      await axios.post(`/api/chat/${activeRoom!._id}`, formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });

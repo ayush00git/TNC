@@ -15,7 +15,7 @@ export default function ProposedFeatures() {
   useEffect(() => {
     const fetchFeatures = async () => {
       try {
-        const response = await fetch('http://localhost:8001/api/features');
+        const response = await fetch('/api/features');
         const data = await response.json();
         // Ensure we are setting an array
         if (Array.isArray(data)) {

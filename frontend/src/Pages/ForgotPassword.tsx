@@ -31,7 +31,7 @@ export default function ForgotPassword() {
     setMessage(null);
 
     try {
-      const response = await fetch('http://localhost:8001/api/auth/forget-password/viaOldPass', {
+      const response = await fetch('/api/auth/forget-password/viaOldPass', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(oldPassForm)
@@ -57,7 +57,7 @@ export default function ForgotPassword() {
     setMessage(null);
 
     try {
-      const response = await fetch('http://localhost:8001/api/auth/forget-password/viaEmail', {
+      const response = await fetch('/api/auth/forget-password/viaEmail', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(emailForm)

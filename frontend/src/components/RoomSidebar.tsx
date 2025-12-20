@@ -45,7 +45,7 @@ export default function RoomSidebar() {
 
       // Fetch from API to sync with backend (source of truth)
       try {
-        const res = await fetch("http://localhost:8001/api/room/joined", {
+        const res = await fetch("/api/room/joined", {
           credentials: "include",
         });
 
