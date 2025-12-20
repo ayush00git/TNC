@@ -1,5 +1,4 @@
 import { Schema, model, Types } from "mongoose";
-import { ref } from "node:process";
 
 export interface IRoom {
     _id: Types.ObjectId,

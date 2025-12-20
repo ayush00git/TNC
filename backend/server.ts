@@ -16,6 +16,7 @@ import { chatRoute } from "./routes/chat"
 import { authRoute } from "./routes/auth";
 import { roomRoute } from "./routes/room";
 import { featureRoute } from "./routes/feature";
+import { customRoomRoute } from "./routes/customRoom";
 
 // middlewares
 import { allowOnlyAuthenticatedUser } from "./middlewares/auth";
@@ -65,6 +66,7 @@ app.use('/api/chat', allowOnlyAuthenticatedUser, chatRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/room', allowOnlyAuthenticatedUser, roomRoute);
 app.use('/api/features', featureRoute);
+app.use('/api/customRoom/', customRoomRoute);
 
 const PORT = process.env.PORT || 8000;
 
