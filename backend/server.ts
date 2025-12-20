@@ -47,7 +47,7 @@ connectToMongo(mongoUri)
   );
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: ["http://13.202.26.208", "http://localhost:5173"],
   credentials: true,
 }))
 
