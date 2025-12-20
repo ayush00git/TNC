@@ -1,23 +1,26 @@
 import express, { urlencoded } from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-dotenv.config();
 import cors from "cors";
 import { Server } from "socket.io";
 import { createServer } from "http";
 
+dotenv.config();
+
 // functions
 import { connectToMongo } from "./services/connection"
 import { socketSetup } from "./services/socket";
+
 // routes
 import { chatRoute } from "./routes/chat"
 import { authRoute } from "./routes/auth";
 import { roomRoute } from "./routes/room";
+import { featureRoute } from "./routes/feature";
+
+// middlewares
 import { allowOnlyAuthenticatedUser } from "./middlewares/auth";
 
 const app = express();
-// app.use(cors()); // REMOVED: conflicting with specific cors config below
-
 const server = createServer(app);
 
 const io = new Server(server, {
@@ -61,6 +64,7 @@ app.get("/", allowOnlyAuthenticatedUser, (req, res) => {
 app.use('/api/chat', allowOnlyAuthenticatedUser, chatRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/room', allowOnlyAuthenticatedUser, roomRoute);
+app.use('/api/features', featureRoute);
 
 const PORT = process.env.PORT || 8000;
 
