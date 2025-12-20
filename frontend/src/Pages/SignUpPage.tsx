@@ -90,18 +90,11 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-[#060010] text-slate-200 font-sans flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Ambience */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-900/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-purple-900/5 rounded-full blur-[120px]" />
-      </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20 mb-6">
-            <span className="font-bold text-white text-xl">D</span>
-          </div>
+
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
             Create an account
           </h1>
