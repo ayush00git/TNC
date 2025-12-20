@@ -1,6 +1,5 @@
-import React from 'react';
 import { 
-  Database, Server, Globe, Wind, Lock, Mail, Cloud, Cpu, Zap, Radio 
+  Database, Server, Wind, Lock, Mail, Cloud, Cpu, Radio 
 } from 'lucide-react';
 
 export default function TechStack() {

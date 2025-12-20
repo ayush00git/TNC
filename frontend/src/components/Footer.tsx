@@ -1,7 +1,5 @@
-import React from 'react';
 import { Github, Linkedin, Instagram, Terminal, GitPullRequest, User } from 'lucide-react';
 import { BsTwitterX } from 'react-icons/bs';
-import { DiChrome } from 'react-icons/di';
 
 export default function Footer() {
   return (

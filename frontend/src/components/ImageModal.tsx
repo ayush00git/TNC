@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { X, Image, UploadCloud } from "lucide-react";
+import { X, UploadCloud } from "lucide-react";
 
 interface ImageModalProps {
   isOpen: boolean;

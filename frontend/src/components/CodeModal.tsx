@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Code, Send } from "lucide-react";
 
 interface CodeModalProps {

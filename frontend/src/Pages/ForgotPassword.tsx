@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Key, ArrowRight, ShieldCheck, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, ArrowRight, ShieldCheck, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import Navbar from '../components/NavBar';
-import Footer from '../components/Footer';
 // import { Link } from 'react-router-dom'; // TODO: Uncomment for routing
 
 type Tab = 'viaOldPass' | 'viaEmail';

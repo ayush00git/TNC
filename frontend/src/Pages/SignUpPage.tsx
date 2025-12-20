@@ -8,11 +8,9 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import Navbar from "../components/NavBar";
 
 export default function SignUpPage() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",

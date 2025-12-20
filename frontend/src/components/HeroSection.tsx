@@ -1,6 +1,5 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MessageSquare, Shield, Zap, Code2, LogIn } from 'lucide-react';
+import { ArrowRight, MessageSquare, Shield, Zap, LogIn } from 'lucide-react';
 
 export default function HeroSection() {
     const navigate = useNavigate();

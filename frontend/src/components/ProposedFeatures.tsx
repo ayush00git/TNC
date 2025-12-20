@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Sparkles, Rocket, GitPullRequest, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Rocket, GitPullRequest, Zap } from 'lucide-react';
 
 interface Feature {
   _id: string; // Adhering to MongoDB standards, though API might return 'id'

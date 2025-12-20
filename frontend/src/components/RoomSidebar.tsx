@@ -26,7 +26,7 @@ export default function RoomSidebar() {
   const location = useLocation();
   const currentPath = location.pathname; // e.g. "/room/design"
   const [joinedSlugs, setJoinedSlugs] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
 
   // Load joined rooms: use localStorage cache first, then fetch from API
   useEffect(() => {
@@ -125,7 +125,7 @@ export default function RoomSidebar() {
           </>
         )}
 
-        {joinedRooms.map((room, index) => {
+        {joinedRooms.map((room, _index) => {
           // Check strict equality for hover/active styling logic if needed
           const isActive = currentPath.includes(room.slug);
 
