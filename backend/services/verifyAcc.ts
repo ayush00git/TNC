@@ -112,7 +112,7 @@ export const verifyAcc = async (user: any) => {
                         <p>Welcome to <strong>TNC</strong>! We're excited to have you on board. To get started, please confirm your email address.</p>
                         
                         <div class="btn-wrapper">
-                            <a href="http://localhost:5173/verify-email?hash=${randomHash}" class="btn">Verify Email Address</a>
+                            <a href="http://tnc.ayushz.me/verify-email?hash=${randomHash}" class="btn">Verify Email Address</a>
                         </div>
                         
                         <p style="font-size: 14px; color: #64748b;">

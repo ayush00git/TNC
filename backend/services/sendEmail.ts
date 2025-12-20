@@ -110,7 +110,7 @@ export const sendEmail = async (user: any): Promise<boolean> => {
                         <p>Welcome to <strong>TNC</strong>! We just got a request to reset you password. Click on the button to reset your password</p>
                         
                         <div class="btn-wrapper">
-                            <a href="http://localhost:5173/reset-password?token=${token}" class="btn">Reset Password</a>
+                            <a href="http://tnc.ayushz.me/reset-password?token=${token}" class="btn">Reset Password</a>
                         </div>
                         
                         <p style="font-size: 14px; color: #64748b;">
