@@ -103,7 +103,7 @@ const MemberModal = ({
 
   const handleInvite = async () => {
     try {
-      await navigator.clipboard.writeText("http://localhost:5173");
+      await navigator.clipboard.writeText(window.location.origin);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
