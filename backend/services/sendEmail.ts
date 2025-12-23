@@ -3,7 +3,7 @@ import { generateToken } from "../services/authToken";
 import dotenv from "dotenv";
 
 dotenv.config();
-
+const FRONTEND_URL = process.env.FRONTEND_PROD_URL || 5173;
 export const sendEmail = async (user: any): Promise<boolean> => {
 
     const transporter = nodemailer.createTransport({
@@ -110,7 +110,7 @@ export const sendEmail = async (user: any): Promise<boolean> => {
                         <p>Welcome to <strong>TNC</strong>! We just got a request to reset you password. Click on the button to reset your password</p>
                         
                         <div class="btn-wrapper">
-                            <a href="http://tnc.ayushz.me/reset-password?token=${token}" class="btn">Reset Password</a>
+                            <a href="${FRONTEND_URL}/reset-password?token=${token}" class="btn">Reset Password</a>
                         </div>
                         
                         <p style="font-size: 14px; color: #64748b;">
