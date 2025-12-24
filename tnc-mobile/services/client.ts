@@ -1,4 +1,5 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -9,10 +10,12 @@ const client = axios.create({
   },
 });
 
-client.interceptors.request.use(request => {
-  console.log('Starting Request', JSON.stringify(request, null, 2));
-  console.log('Full URL:', request.baseURL ? request.baseURL + request.url : request.url);
-  return request;
+client.interceptors.request.use(async (config) => {
+  const token = await AsyncStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export default client;

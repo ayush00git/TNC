@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import client from '../services/client'; // Import the client
 import { useToast } from '../context/ToastContext';
@@ -22,7 +23,9 @@ export default function LoginScreen({ navigation }: any) {
       const response = await client.post('/api/auth/login', { email, password });
       console.log('Login successful:', response.data);
 
-      // TODO: Store token if received
+      if (response.data.token) {
+        await AsyncStorage.setItem('token', response.data.token);
+      }
 
       showToast(response.data.message, 'success');
       // Replace current screen with Room to prevent going back to login
