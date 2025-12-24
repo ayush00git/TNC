@@ -65,3 +65,13 @@ export const handleJoinedRooms = async (req: Request, res: Response) => {
     throw new Error(`While fetching joined rooms`);
   }
 };
+// get all rooms
+export const handleGetAllRooms = async (req: Request, res: Response) => {
+  try {
+    const rooms = await Room.find({}).select("roomId title description");
+    return res.status(200).json({ rooms });
+  } catch (error) {
+    console.log(`${error}`);
+    throw new Error(`While fetching all rooms`);
+  }
+};

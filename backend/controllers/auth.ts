@@ -99,7 +99,7 @@ export const handleUserLogIn = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       message: "Logged in success",
-      token: token,
+      token,
       user: {
         _id: existingUser._id,
         name: existingUser.name,
