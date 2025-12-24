@@ -8,16 +8,18 @@ export default function LoginScreen({ navigation }: any) {
   const handleLogin = () => {
     console.log("Logging in with:", email, password);
     // TODO: Add API Logic here
+    // TODO: Add API Logic here
+    navigation.replace('Room');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          
+
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
