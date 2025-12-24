@@ -26,6 +26,10 @@ export default function LoginScreen({ navigation }: any) {
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
       }
+      if (response.data.user && response.data.user._id) {
+        await AsyncStorage.setItem('userId', response.data.user._id);
+        await AsyncStorage.setItem('userName', response.data.user.name);
+      }
 
       showToast(response.data.message, 'success');
       // Replace current screen with Room to prevent going back to login

@@ -1,66 +1,56 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     StyleSheet, Text, View, TextInput, TouchableOpacity,
-    SafeAreaView, Platform, FlatList, Image, StatusBar, Keyboard, Animated, Modal
+    SafeAreaView, Platform, FlatList, Image, StatusBar, Keyboard, Animated, ActivityIndicator
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import AttachmentModal from '../components/AttachmentModal';
 import CodeSnippetModal from '../components/CodeSnippetModal';
 import MembersModal from '../components/MembersModal';
-
-// Mock Data Types
-interface Message {
-    id: string;
-    userId: number;
-    content: string;
-    timestamp: string;
-    type?: 'text' | 'image' | 'code';
-    imageUrl?: string;
-}
-
-interface User {
-    id: number;
-    name: string;
-    avatar: string;
-}
-
-// Mock Data
-const CURRENT_USER = { id: 99, name: "Alex Dev", avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Alex" };
-const OTHER_USER = { id: 1, name: "Sarah Chen", avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Sarah" };
-
-const INITIAL_MESSAGES: Message[] = [
-    { id: '1', userId: 1, content: "Has anyone deployed the new smart contract to Sepolia testnet yet?", timestamp: "10:42 AM" },
-    { id: '2', userId: 99, content: "I'm working on it. The gas optimization check failed.", timestamp: "10:44 AM" },
-    { id: '3', userId: 1, content: "Classic reentrancy guard issue?", timestamp: "10:45 AM" },
-    { id: '4', userId: 99, content: "Nah, just inefficient storage mapping. Fixing it now.", timestamp: "10:45 AM" },
-    { id: '5', userId: 99, content: "Give me 15 mins.", timestamp: "10:46 AM" },
-];
+import client from '../services/client'; // Import client
+import { Message, User } from '../types'; // Import types
+import { useToast } from '../context/ToastContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ChatScreen({ navigation, route }: any) {
-    const roomTitle = route.params?.roomTitle || "Blockchain";
+    const { roomTitle, roomId } = route.params || { roomTitle: "Room", roomId: "" };
 
     const [text, setText] = useState('');
-    const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [showAttachmentModal, setShowAttachmentModal] = useState(false);
     const [showCodeModal, setShowCodeModal] = useState(false);
     const [showMembersModal, setShowMembersModal] = useState(false);
     const flatListRef = useRef<FlatList>(null);
     const keyboardHeight = useRef(new Animated.Value(0)).current;
 
+    // Polling interval ref
+    const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Get current user from storage/context (mocking simple extraction if not stored fully)
+    useEffect(() => {
+        const loadUser = async () => {
+            try {
+                const storedToken = await AsyncStorage.getItem('token');
+            } catch (e) { }
+        };
+        loadUser();
+    }, []);
+
+    // Keyboard handling
     useEffect(() => {
         const showSubscription = Keyboard.addListener(
             Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
             (e) => {
-                // Move input container to sit ON TOP of keyboard, not just at keyboard level
                 Animated.timing(keyboardHeight, {
                     duration: Platform.OS === 'ios' ? e.duration : 250,
-                    toValue: e.endCoordinates.height - (Platform.OS === 'ios' ? 34 : 0), // Subtract safe area offset
+                    toValue: e.endCoordinates.height - (Platform.OS === 'ios' ? 34 : 0),
                     useNativeDriver: false,
                 }).start();
             }
         );
-
         const hideSubscription = Keyboard.addListener(
             Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
             (e) => {
@@ -71,75 +61,91 @@ export default function ChatScreen({ navigation, route }: any) {
                 }).start();
             }
         );
-
         return () => {
             showSubscription.remove();
             hideSubscription.remove();
         };
     }, []);
 
-    const handleSend = () => {
+    // Fetch Messages
+    const fetchMessages = async () => {
+        try {
+            const response = await client.get(`/api/chat/chat-history/${roomId}`);
+            // Backend returns array of messages
+            setMessages(response.data);
+        } catch (error) {
+            console.error("Error fetching chat:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchMessages();
+        // Poll every 3 seconds for new messages
+        pollingRef.current = setInterval(fetchMessages, 3000);
+        return () => {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+        };
+    }, [roomId]);
+
+    const handleSend = async () => {
         if (!text.trim()) return;
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            userId: CURRENT_USER.id,
-            content: text,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        setMessages([...messages, newMessage]);
-        setText('');
-
-        // Scroll to bottom after sending
-        setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+        try {
+            // Optimistic update? Maybe risky without real ID.
+            // Let's just send and let polling/response update it.
+            await client.post(`/api/chat/${roomId}`, { text });
+            setText('');
+            fetchMessages(); // Immediate refresh
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        } catch (error) {
+            console.error("Error sending message:", error);
+        }
     };
 
     // Render a single message item
     const renderItem = ({ item, index }: { item: Message; index: number }) => {
-        const isMe = item.userId === CURRENT_USER.id;
-        const user = isMe ? CURRENT_USER : OTHER_USER;
+        // Check if message is from current user
+        const isMe = (currentUser && item.sender) ? item.sender._id === currentUser._id : false;
 
-        // Check if previous message was from same user to group them visually
         const prevMessage = messages[index - 1];
-        const isSequence = prevMessage && prevMessage.userId === item.userId;
+        const isSequence = prevMessage && prevMessage.sender && item.sender && prevMessage.sender._id === item.sender._id;
 
         return (
             <View style={[styles.messageRow, isSequence && styles.sequenceRow]}>
-                {/* Avatar (only show if not sequential) */}
+                {/* Avatar */}
                 <View style={styles.avatarContainer}>
                     {!isSequence && (
                         <Image
-                            source={{ uri: user.avatar }}
+                            source={{ uri: item.sender?.avatar || `https://api.dicebear.com/7.x/initials/png?seed=${item.sender?.name || 'Unknown'}` }}
                             style={styles.avatar}
                         />
                     )}
                 </View>
 
-                {/* Message Content */}
+                {/* Content */}
                 <View style={styles.messageContent}>
                     {!isSequence && (
                         <View style={styles.messageHeader}>
                             <Text style={[styles.userName, isMe && styles.myUserName]}>
-                                {user.name}
+                                {item.sender?.name || "Unknown User"}
                             </Text>
-                            <Text style={styles.timestamp}>{item.timestamp}</Text>
+                            <Text style={styles.timestamp}>
+                                {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </Text>
                         </View>
                     )}
-                    {item.type === 'image' && item.imageUrl ? (
+                    {item.imageURL ? (
                         <Image
-                            source={{ uri: item.imageUrl }}
+                            source={{ uri: item.imageURL }}
                             style={styles.messageImage}
                             resizeMode="cover"
                         />
-                    ) : item.type === 'code' ? (
-                        <View style={styles.codeBlock}>
-                            <Text style={styles.codeText}>{item.content}</Text>
-                        </View>
                     ) : (
-                        <Text style={styles.messageText}>{item.content}</Text>
+                        <Text style={styles.messageText}>{item.text}</Text>
                     )}
                 </View>
             </View>
@@ -168,26 +174,28 @@ export default function ChatScreen({ navigation, route }: any) {
                 </View>
 
                 {/* Message List */}
-                <FlatList
-                    ref={flatListRef}
-                    data={messages}
-                    renderItem={renderItem}
-                    keyExtractor={item => item.id}
-                    contentContainerStyle={styles.listContent}
-                    style={styles.list}
-                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                />
+                {loading ? (
+                    <View style={styles.center}>
+                        <ActivityIndicator size="small" color="#6366f1" />
+                    </View>
+                ) : (
+                    <FlatList
+                        ref={flatListRef}
+                        data={messages}
+                        renderItem={renderItem}
+                        keyExtractor={item => item._id}
+                        contentContainerStyle={styles.listContent}
+                        style={styles.list}
+                        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                        ListEmptyComponent={
+                            <Text style={{ color: '#64748b', textAlign: 'center', marginTop: 20 }}>No messages yet. Say hi!</Text>
+                        }
+                    />
+                )}
             </SafeAreaView>
 
-            {/* Input Area - Moves with keyboard, attached to it */}
-            <Animated.View
-                style={[
-                    styles.inputContainer,
-                    {
-                        bottom: keyboardHeight
-                    }
-                ]}
-            >
+            {/* Input Area */}
+            <Animated.View style={[styles.inputContainer, { bottom: keyboardHeight }]}>
                 <View style={styles.inputWrapper}>
                     <TouchableOpacity
                         style={styles.attachButton}
@@ -206,7 +214,7 @@ export default function ChatScreen({ navigation, route }: any) {
                     />
 
                     <TouchableOpacity
-                        style={[styles.sendButton, text.trim() && styles.sendButtonActive]}
+                        style={[styles.sendButton, text.trim() ? styles.sendButtonActive : {}]} // Fixed type error with null/undefined checking
                         onPress={handleSend}
                         disabled={!text.trim()}
                     >
@@ -215,50 +223,22 @@ export default function ChatScreen({ navigation, route }: any) {
                 </View>
             </Animated.View>
 
+            {/* Modals - Keep existing implementations */}
             <AttachmentModal
                 visible={showAttachmentModal}
                 onClose={() => setShowAttachmentModal(false)}
-                onSelectImage={async () => {
-                    setShowAttachmentModal(false);
-                    const result = await ImagePicker.launchImageLibraryAsync({
-                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                        allowsEditing: true,
-                        aspect: [4, 3],
-                        quality: 1,
-                    });
-
-                    if (!result.canceled) {
-                        const newMessage: Message = {
-                            id: Date.now().toString(),
-                            userId: CURRENT_USER.id,
-                            content: 'Sent an image',
-                            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                            type: 'image',
-                            imageUrl: result.assets[0].uri
-                        };
-                        setMessages(prev => [...prev, newMessage]);
-                        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-                    }
-                }}
-                onSelectCode={() => {
-                    setShowAttachmentModal(false);
-                    setShowCodeModal(true);
-                }}
+                onSelectImage={async () => { /* Implement Image Upload Logic Later */ setShowAttachmentModal(false); }}
+                onSelectCode={() => { setShowAttachmentModal(false); setShowCodeModal(true); }}
             />
 
             <CodeSnippetModal
                 visible={showCodeModal}
                 onClose={() => setShowCodeModal(false)}
                 onSend={(code) => {
-                    const newMessage: Message = {
-                        id: Date.now().toString(),
-                        userId: CURRENT_USER.id,
-                        content: code,
-                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        type: 'code'
-                    };
-                    setMessages(prev => [...prev, newMessage]);
-                    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+                    /* Handle Code Send - Treat as text for now or extend API */
+                    client.post(`/api/chat/${roomId}`, { text: code });
+                    setShowCodeModal(false);
+                    fetchMessages();
                 }}
             />
 
@@ -280,6 +260,12 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    // ... [Previous styles remain mostly same, adding missing ones if any] ...
     messageImage: {
         width: 200,
         height: 150,
@@ -299,7 +285,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#a5b4fc',
     },
-    // Header
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -332,16 +317,14 @@ const styles = StyleSheet.create({
     headerAction: {
         padding: 8,
     },
-    // List
     list: {
         flex: 1,
     },
     listContent: {
         paddingVertical: 16,
         paddingHorizontal: 16,
-        paddingBottom: 100, // Extra padding to prevent overlap with input
+        paddingBottom: 100,
     },
-    // Message Item
     messageRow: {
         flexDirection: 'row',
         marginBottom: 30,
@@ -386,16 +369,15 @@ const styles = StyleSheet.create({
         fontSize: 15,
         lineHeight: 22,
     },
-    // Input - Positioned absolutely, moves with keyboard
     inputContainer: {
         position: 'absolute',
         left: 0,
         right: 0,
-        bottom: 0, // Will be animated with keyboardHeight
+        bottom: 0,
         backgroundColor: '#060010',
         borderTopWidth: 1,
         borderTopColor: 'rgba(255,255,255,0.05)',
-        paddingBottom: Platform.OS === 'ios' ? 64 : 50, // Raised from bottom - safe area for home indicator/nav buttons
+        paddingBottom: Platform.OS === 'ios' ? 64 : 50,
     },
     inputWrapper: {
         flexDirection: 'row',
