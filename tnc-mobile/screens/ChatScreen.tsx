@@ -1,9 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     StyleSheet, Text, View, TextInput, TouchableOpacity,
-    SafeAreaView, Platform, FlatList, Image, StatusBar, Keyboard, Animated
+    SafeAreaView, Platform, FlatList, Image, StatusBar, Keyboard, Animated, Modal
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import AttachmentModal from '../components/AttachmentModal';
+import CodeSnippetModal from '../components/CodeSnippetModal';
+import MembersModal from '../components/MembersModal';
 
 // Mock Data Types
 interface Message {
@@ -11,6 +15,8 @@ interface Message {
     userId: number;
     content: string;
     timestamp: string;
+    type?: 'text' | 'image' | 'code';
+    imageUrl?: string;
 }
 
 interface User {
@@ -36,6 +42,9 @@ export default function ChatScreen({ navigation, route }: any) {
 
     const [text, setText] = useState('');
     const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+    const [showAttachmentModal, setShowAttachmentModal] = useState(false);
+    const [showCodeModal, setShowCodeModal] = useState(false);
+    const [showMembersModal, setShowMembersModal] = useState(false);
     const flatListRef = useRef<FlatList>(null);
     const keyboardHeight = useRef(new Animated.Value(0)).current;
 
@@ -119,7 +128,19 @@ export default function ChatScreen({ navigation, route }: any) {
                             <Text style={styles.timestamp}>{item.timestamp}</Text>
                         </View>
                     )}
-                    <Text style={styles.messageText}>{item.content}</Text>
+                    {item.type === 'image' && item.imageUrl ? (
+                        <Image
+                            source={{ uri: item.imageUrl }}
+                            style={styles.messageImage}
+                            resizeMode="cover"
+                        />
+                    ) : item.type === 'code' ? (
+                        <View style={styles.codeBlock}>
+                            <Text style={styles.codeText}>{item.content}</Text>
+                        </View>
+                    ) : (
+                        <Text style={styles.messageText}>{item.content}</Text>
+                    )}
                 </View>
             </View>
         );
@@ -141,7 +162,7 @@ export default function ChatScreen({ navigation, route }: any) {
                         <Text style={styles.headerTitle}>{roomTitle}</Text>
                     </View>
 
-                    <TouchableOpacity style={styles.headerAction}>
+                    <TouchableOpacity style={styles.headerAction} onPress={() => setShowMembersModal(true)}>
                         <Feather name="users" size={20} color="#cbd5e1" />
                     </TouchableOpacity>
                 </View>
@@ -159,16 +180,19 @@ export default function ChatScreen({ navigation, route }: any) {
             </SafeAreaView>
 
             {/* Input Area - Moves with keyboard, attached to it */}
-            <Animated.View 
+            <Animated.View
                 style={[
                     styles.inputContainer,
-                    { 
+                    {
                         bottom: keyboardHeight
                     }
                 ]}
             >
                 <View style={styles.inputWrapper}>
-                    <TouchableOpacity style={styles.attachButton}>
+                    <TouchableOpacity
+                        style={styles.attachButton}
+                        onPress={() => setShowAttachmentModal(true)}
+                    >
                         <Feather name="plus" size={24} color="#64748b" />
                     </TouchableOpacity>
 
@@ -190,6 +214,59 @@ export default function ChatScreen({ navigation, route }: any) {
                     </TouchableOpacity>
                 </View>
             </Animated.View>
+
+            <AttachmentModal
+                visible={showAttachmentModal}
+                onClose={() => setShowAttachmentModal(false)}
+                onSelectImage={async () => {
+                    setShowAttachmentModal(false);
+                    const result = await ImagePicker.launchImageLibraryAsync({
+                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                        allowsEditing: true,
+                        aspect: [4, 3],
+                        quality: 1,
+                    });
+
+                    if (!result.canceled) {
+                        const newMessage: Message = {
+                            id: Date.now().toString(),
+                            userId: CURRENT_USER.id,
+                            content: 'Sent an image',
+                            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            type: 'image',
+                            imageUrl: result.assets[0].uri
+                        };
+                        setMessages(prev => [...prev, newMessage]);
+                        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+                    }
+                }}
+                onSelectCode={() => {
+                    setShowAttachmentModal(false);
+                    setShowCodeModal(true);
+                }}
+            />
+
+            <CodeSnippetModal
+                visible={showCodeModal}
+                onClose={() => setShowCodeModal(false)}
+                onSend={(code) => {
+                    const newMessage: Message = {
+                        id: Date.now().toString(),
+                        userId: CURRENT_USER.id,
+                        content: code,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        type: 'code'
+                    };
+                    setMessages(prev => [...prev, newMessage]);
+                    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+                }}
+            />
+
+            <MembersModal
+                visible={showMembersModal}
+                onClose={() => setShowMembersModal(false)}
+                roomTitle={roomTitle}
+            />
         </View>
     );
 }
@@ -202,6 +279,25 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    },
+    messageImage: {
+        width: 200,
+        height: 150,
+        borderRadius: 12,
+        marginTop: 4,
+    },
+    codeBlock: {
+        backgroundColor: '#0f0f12',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    codeText: {
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        fontSize: 13,
+        color: '#a5b4fc',
     },
     // Header
     header: {
