@@ -3,7 +3,6 @@ import { generateToken } from "../services/authToken";
 import dotenv from "dotenv";
 
 dotenv.config();
-const FRONTEND_URL = process.env.FRONTEND_PROD_URL || 5173;
 export const sendEmail = async (user: any): Promise<boolean> => {
 
     const transporter = nodemailer.createTransport({
@@ -17,6 +16,7 @@ export const sendEmail = async (user: any): Promise<boolean> => {
     })
 
     const token = generateToken(user);
+    const FRONTEND_URL = process.env.FRONTEND_PROD_URL;
 
     await transporter.sendMail({
         from: `${process.env.MAIL_USER!}`,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 import client from '../services/client'; // Import the client
 import { useToast } from '../context/ToastContext';
@@ -9,6 +10,8 @@ export default function SignupScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { showToast } = useToast();
 
   const handleSignup = async () => {
@@ -30,7 +33,7 @@ export default function SignupScreen({ navigation }: any) {
         password
       });
       console.log('Signup successful:', response.data);
-      showToast('Account created successfully! Please login.', 'success');
+      showToast(response.data.message, 'success');
       setTimeout(() => {
         navigation.navigate('Login');
       }, 1500);
@@ -89,27 +92,37 @@ export default function SignupScreen({ navigation }: any) {
             {/* Password Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>PASSWORD</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#64748b"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[styles.input, styles.passwordInput]}
+                  placeholder="••••••••"
+                  placeholderTextColor="#64748b"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                  <Feather name={showPassword ? "eye" : "eye-off"} size={20} color="#64748b" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Confirm Password Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>CONFIRM PASSWORD</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#64748b"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[styles.input, styles.passwordInput]}
+                  placeholder="••••••••"
+                  placeholderTextColor="#64748b"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
+                  <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={20} color="#64748b" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Action Button */}
@@ -179,6 +192,10 @@ const styles = StyleSheet.create({
     color: '#64748b',
     letterSpacing: 1,
   },
+  passwordContainer: {
+    position: 'relative',
+    justifyContent: 'center',
+  },
   input: {
     backgroundColor: '#0A0514',
     borderWidth: 1,
@@ -187,6 +204,13 @@ const styles = StyleSheet.create({
     padding: 16,
     color: '#fff',
     fontSize: 16,
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
   },
   signupButton: {
     backgroundColor: '#4f46e5',

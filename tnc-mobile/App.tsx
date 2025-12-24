@@ -9,6 +9,8 @@ import SignupScreen from './screens/SignupScreen';
 import ChatScreen from './screens/ChatScreen';
 import RoomScreen from './screens/RoomScreen';
 
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+
 const Stack = createNativeStackNavigator();
 
 import { ToastProvider } from './context/ToastContext';
@@ -28,6 +30,7 @@ export default function App() {
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
 
           <Stack.Screen name="Room" component={RoomScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />

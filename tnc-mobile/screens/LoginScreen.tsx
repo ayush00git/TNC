@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 import client from '../services/client'; // Import the client
 import { useToast } from '../context/ToastContext';
@@ -7,6 +8,7 @@ import { useToast } from '../context/ToastContext';
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { showToast } = useToast();
 
   const handleLogin = async () => {
@@ -22,7 +24,7 @@ export default function LoginScreen({ navigation }: any) {
 
       // TODO: Store token if received
 
-      showToast('Login successful', 'success');
+      showToast(response.data.message, 'success');
       // Replace current screen with Room to prevent going back to login
       navigation.replace('Room');
     } catch (error: any) {
@@ -64,19 +66,34 @@ export default function LoginScreen({ navigation }: any) {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>PASSWORD</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#64748b"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[styles.input, styles.passwordInput]}
+                  placeholder="••••••••"
+                  placeholderTextColor="#64748b"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                  <Feather name={showPassword ? "eye" : "eye-off"} size={20} color="#64748b" />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={styles.forgotPassword}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
               <Text style={styles.loginButtonText}>Sign In</Text>
             </TouchableOpacity>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                <Text style={styles.linkText}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -133,6 +150,10 @@ const styles = StyleSheet.create({
     color: '#64748b',
     letterSpacing: 1,
   },
+  passwordContainer: {
+    position: 'relative',
+    justifyContent: 'center',
+  },
   input: {
     backgroundColor: '#0A0514',
     borderWidth: 1,
@@ -141,6 +162,13 @@ const styles = StyleSheet.create({
     padding: 16,
     color: '#fff',
     fontSize: 16,
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
   },
   loginButton: {
     backgroundColor: '#4f46e5',
@@ -157,5 +185,28 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  footerText: {
+    color: '#94a3b8',
+    fontSize: 14,
+  },
+  linkText: {
+    color: '#818cf8',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+  },
+  forgotPasswordText: {
+    color: '#818cf8',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
