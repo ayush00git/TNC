@@ -26,14 +26,37 @@ export default function ChatScreen({ navigation, route }: any) {
     const flatListRef = useRef<FlatList>(null);
     const keyboardHeight = useRef(new Animated.Value(0)).current;
 
+    const [members, setMembers] = useState<any[]>([]); // Use appropriate type or import Member
+
     // Polling interval ref
     const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Get current user from storage/context (mocking simple extraction if not stored fully)
+    const fetchRoomInfo = async () => {
+        try {
+            const response = await client.get(`/api/room/${roomId}`);
+            if (response.data && response.data.room && response.data.room.members) {
+                // Map backend users to MembersModal format
+                const mappedMembers = response.data.room.members.map((m: any) => ({
+                    id: m._id,
+                    name: m.name,
+                    avatar: m.avatar || `https://api.dicebear.com/7.x/initials/png?seed=${m.name}`
+                }));
+                setMembers(mappedMembers);
+            }
+        } catch (error) {
+            console.error("Error fetching room info:", error);
+        }
+    };
+
+
+    // Get current user from storage/context
     useEffect(() => {
         const loadUser = async () => {
             try {
+                // Here we should actually decode the token or fetch user profile
+                // For now, we rely on the backend being stateless or efficient
                 const storedToken = await AsyncStorage.getItem('token');
+                // Potential TODO: Decode token to get user ID if needed immediately
             } catch (e) { }
         };
         loadUser();
@@ -67,6 +90,8 @@ export default function ChatScreen({ navigation, route }: any) {
         };
     }, []);
 
+
+
     // Fetch Messages
     const fetchMessages = async () => {
         try {
@@ -79,6 +104,12 @@ export default function ChatScreen({ navigation, route }: any) {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (showMembersModal) {
+            fetchRoomInfo();
+        }
+    }, [showMembersModal, roomId]);
 
     useEffect(() => {
         fetchMessages();
@@ -138,7 +169,7 @@ export default function ChatScreen({ navigation, route }: any) {
                             </Text>
                         </View>
                     )}
-                    {item.imageURL ? (
+                    {item.imageURL && item.imageURL.trim() ? (
                         <Image
                             source={{ uri: item.imageURL }}
                             style={styles.messageImage}
@@ -246,6 +277,7 @@ export default function ChatScreen({ navigation, route }: any) {
                 visible={showMembersModal}
                 onClose={() => setShowMembersModal(false)}
                 roomTitle={roomTitle}
+                members={members}
             />
         </View>
     );
