@@ -1,15 +1,35 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 
+import client from '../services/client'; // Import the client
+import { useToast } from '../context/ToastContext';
+
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { showToast } = useToast();
 
-  const handleLogin = () => {
-    console.log("Logging in with:", email, password);
-    // TODO: Add API Logic here
-    // TODO: Add API Logic here
-    navigation.replace('Room');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      showToast('Please fill in all fields', 'error');
+      return;
+    }
+
+    try {
+      console.log("Logging in with:", email);
+      const response = await client.post('/api/auth/login', { email, password });
+      console.log('Login successful:', response.data);
+
+      // TODO: Store token if received
+
+      showToast('Login successful', 'success');
+      // Replace current screen with Room to prevent going back to login
+      navigation.replace('Room');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      const message = error.response?.data?.message || error.message || 'Invalid credentials';
+      showToast(message, 'error');
+    }
   };
 
   return (

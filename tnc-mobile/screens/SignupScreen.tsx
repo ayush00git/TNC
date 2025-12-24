@@ -1,25 +1,54 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
+import client from '../services/client'; // Import the client
+import { useToast } from '../context/ToastContext';
+
 export default function SignupScreen({ navigation }: any) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const { showToast } = useToast();
 
-  const handleSignup = () => {
-    console.log("Signing up:", { name, email });
-    // TODO: Add API Logic here
+  const handleSignup = async () => {
+    if (!name || !email || !password || !confirmPassword) {
+      showToast('Please fill in all fields', 'error');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showToast('Passwords do not match', 'error');
+      return;
+    }
+
+    try {
+      console.log("Signing up:", { name, email });
+      const response = await client.post('/api/auth/signup', {
+        name,
+        email,
+        password
+      });
+      console.log('Signup successful:', response.data);
+      showToast('Account created successfully! Please login.', 'success');
+      setTimeout(() => {
+        navigation.navigate('Login');
+      }, 1500);
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      const message = error.response?.data?.message || error.message || 'Something went wrong';
+      showToast(message, 'error');
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          
+
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
@@ -30,7 +59,7 @@ export default function SignupScreen({ navigation }: any) {
           </View>
 
           <View style={styles.form}>
-            
+
             {/* Name Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>FULL NAME</Text>
