@@ -73,13 +73,14 @@ export default function ChatScreen({ navigation, route }: any) {
                 const storedToken = await AsyncStorage.getItem('token');
                 if (storedToken) {
                     const decoded: any = jwtDecode(storedToken);
-                    // Ensure the decoded token has the fields we need, or map them
                     setCurrentUser({
-                        _id: decoded._id || decoded.id, // Handle potential field mismatch
+                        _id: decoded.userId || decoded._id || decoded.id,
                         name: decoded.name,
                         email: decoded.email,
-                        avatar: decoded.avatar // Might be undefined
+                        avatar: decoded.avatar
                     });
+                } else {
+                    // console.log("Debug: No token found in AsyncStorage");
                 }
             } catch (e) {
                 console.error("Failed to load user from token", e);
@@ -142,16 +143,13 @@ export default function ChatScreen({ navigation, route }: any) {
             fetchMessages();
 
             // Socket Connection
-            console.log("ChatScreen: Initializing socket for room:", roomMongoId);
             socketRef.current = initSocket();
 
             // Monitor connection status
             socketRef.current.on('connect', () => {
-                console.log("ChatScreen: Socket connected successfully");
                 setSocketConnected(true);
             });
             socketRef.current.on('disconnect', () => {
-                console.log("ChatScreen: Socket disconnected");
                 setSocketConnected(false);
             });
 
@@ -283,10 +281,13 @@ export default function ChatScreen({ navigation, route }: any) {
     // Render a single message item
     const renderItem = ({ item, index }: { item: Message; index: number }) => {
         // Check if message is from current user
-        const isMe = (currentUser && item.sender) ? item.sender._id === currentUser._id : false;
+        const isMe = (currentUser && item.sender)
+            ? String(item.sender._id || item.sender) === String(currentUser._id)
+            : false;
 
         const prevMessage = messages[index - 1];
-        const isSequence = prevMessage && prevMessage.sender && item.sender && prevMessage.sender._id === item.sender._id;
+        const isSequence = prevMessage && prevMessage.sender && item.sender &&
+            String(prevMessage.sender._id || prevMessage.sender) === String(item.sender._id || item.sender);
 
         return (
             <View style={[styles.messageRow, isSequence && styles.sequenceRow]}>
@@ -305,7 +306,7 @@ export default function ChatScreen({ navigation, route }: any) {
                     {!isSequence && (
                         <View style={styles.messageHeader}>
                             <Text style={[styles.userName, isMe && styles.myUserName]}>
-                                {item.sender?.name || "Unknown User"}
+                                {item.sender?.name || "Unknown User"} {isMe && "(You)"}
                             </Text>
                             <Text style={styles.timestamp}>
                                 {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -457,6 +458,7 @@ export default function ChatScreen({ navigation, route }: any) {
                 onClose={() => setShowMembersModal(false)}
                 roomTitle={roomTitle}
                 members={members}
+                currentUserId={currentUser?._id}
             />
 
             {/* Connection Status Indicator */}
@@ -541,7 +543,7 @@ const styles = StyleSheet.create({
     listContent: {
         paddingVertical: 16,
         paddingHorizontal: 16,
-        paddingBottom: 100,
+        paddingBottom: 160, // Increased to prevent overlap with input bar
     },
     messageRow: {
         flexDirection: 'row',

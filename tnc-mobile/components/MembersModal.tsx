@@ -17,6 +17,7 @@ interface MembersModalProps {
   onClose: () => void;
   members?: Member[]; // Optional: if you pass data from parent
   roomTitle?: string;
+  currentUserId?: string;
 }
 
 // --- Mock Data (Fallback) ---
@@ -28,7 +29,7 @@ const MOCK_MEMBERS: Member[] = [
   { id: 5, name: "Harvey Specter", avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Harvey" },
 ];
 
-export default function MembersModal({ visible, onClose, members = MOCK_MEMBERS, roomTitle = "Room Members" }: MembersModalProps) {
+export default function MembersModal({ visible, onClose, members = MOCK_MEMBERS, roomTitle = "Room Members", currentUserId }: MembersModalProps) {
 
   const renderMember = ({ item }: { item: Member }) => (
     <View style={styles.memberRow}>
@@ -39,7 +40,9 @@ export default function MembersModal({ visible, onClose, members = MOCK_MEMBERS,
 
       {/* Info */}
       <View style={styles.infoContainer}>
-        <Text style={styles.memberName}>{item.name}</Text>
+        <Text style={styles.memberName}>
+          {item.name} {String(item.id) === String(currentUserId) ? "(You)" : ""}
+        </Text>
       </View>
     </View>
   );

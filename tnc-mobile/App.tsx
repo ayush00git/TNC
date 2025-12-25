@@ -15,12 +15,42 @@ const Stack = createNativeStackNavigator();
 
 import { ToastProvider } from './context/ToastContext';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ActivityIndicator, View } from 'react-native';
+import { useState, useEffect } from 'react';
+
 export default function App() {
+  const [initialRoute, setInitialRoute] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          setInitialRoute('Room');
+        } else {
+          setInitialRoute('Welcome');
+        }
+      } catch (e) {
+        setInitialRoute('Welcome');
+      }
+    };
+    checkToken();
+  }, []);
+
+  if (!initialRoute) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#060010', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#4f46e5" />
+      </View>
+    );
+  }
+
   return (
     <ToastProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Welcome"
+          initialRouteName={initialRoute}
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: '#060010' },

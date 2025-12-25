@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, FlatList, Dimensions, StatusBar, Platform, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import client from '../services/client'; // Import client
 import { Room } from '../types'; // Import Room type
@@ -41,6 +42,15 @@ export default function RoomScreen({ navigation }: any) {
       showToast('Failed to load rooms', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('token');
+      navigation.replace('Welcome');
+    } catch (error) {
+      console.error("Logout failed", error);
     }
   };
 
@@ -99,10 +109,10 @@ export default function RoomScreen({ navigation }: any) {
           <Text style={styles.greeting}>Welcome back,</Text>
           <Text style={styles.title}>Choose a Room</Text>
         </View>
-        <TouchableOpacity style={styles.profileButton} onPress={fetchRooms}>
-          {/* Refresh logic */}
-          <View style={styles.avatarPlaceholder}>
-            <Feather name="refresh-cw" size={18} color="#818cf8" />
+        <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
+          {/* Logout logic */}
+          <View style={[styles.avatarPlaceholder, styles.logoutContainer]}>
+            <Feather name="log-out" size={18} color="#ef4444" />
           </View>
         </TouchableOpacity>
       </View>
@@ -172,6 +182,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(99, 102, 241, 0.3)',
+  },
+  logoutContainer: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
   },
   gridContent: {
     paddingHorizontal: 16,
