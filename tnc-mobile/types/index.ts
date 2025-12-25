@@ -23,4 +23,5 @@ export interface Message {
     imageURL?: string;
     createdAt: string;
     updatedAt: string;
+    status?: 'sending' | 'sent' | 'failed';
 }

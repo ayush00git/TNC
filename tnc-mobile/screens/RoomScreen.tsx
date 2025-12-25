@@ -57,7 +57,7 @@ export default function RoomScreen({ navigation }: any) {
 
     navigation.navigate('Chat', {
       roomTitle: room.title,
-      roomId: room._id // Pass _id for consistency with other lookups or use room.roomId if backend prefers that
+      roomId: room.roomId // Pass String ID for API lookups (e.g. "general")
     });
   };
 
