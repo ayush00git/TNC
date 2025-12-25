@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     StyleSheet, Text, View, TextInput, TouchableOpacity,
-    SafeAreaView, Platform, FlatList, Image, StatusBar, Keyboard, Animated, ActivityIndicator
+    SafeAreaView, Platform, FlatList, Image, StatusBar, Keyboard, Animated, ActivityIndicator, Modal, ScrollView
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -30,6 +30,7 @@ export default function ChatScreen({ navigation, route }: any) {
     const [socketConnected, setSocketConnected] = useState(false); // Connection status
     const [roomMongoId, setRoomMongoId] = useState<string | null>(null); // Store actual _id for chat checks
     const [selectedImage, setSelectedImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
+    const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
     const flatListRef = useRef<FlatList>(null);
     const keyboardHeight = useRef(new Animated.Value(0)).current;
 
@@ -115,7 +116,29 @@ export default function ChatScreen({ navigation, route }: any) {
             showSubscription.remove();
             hideSubscription.remove();
         };
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
+        };
     }, []);
+
+    // Auto-scroll when keyboard opens
+    useEffect(() => {
+        if (messages.length > 0) {
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 300); // Small delay to wait for keyboard animation
+        }
+    }, [keyboardHeight]); // Re-run when keyboard height changes
+
+    // Auto-scroll when messages change (new message, initial load, etc.)
+    useEffect(() => {
+        if (messages.length > 0) {
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 400); // Delay to ensure layout is complete
+        }
+    }, [messages]); // Re-run whenever messages array changes
 
 
 
@@ -222,7 +245,7 @@ export default function ChatScreen({ navigation, route }: any) {
         };
 
         // Add optimistic message
-        setMessages(prev => [optimisticMessage, ...prev]);
+        setMessages(prev => [...prev, optimisticMessage]);
 
         try {
             // Optimistic update? Maybe risky without real ID.
@@ -314,13 +337,21 @@ export default function ChatScreen({ navigation, route }: any) {
                         </View>
                     )}
                     {item.imageURL && item.imageURL.trim() ? (
-                        <Image
-                            source={{ uri: item.imageURL }}
-                            style={styles.messageImage}
-                            resizeMode="cover"
-                        />
+                        <TouchableOpacity onPress={() => setPreviewImageUrl(item.imageURL || '')}>
+                            <Image
+                                source={{ uri: item.imageURL }}
+                                style={styles.messageImage}
+                                resizeMode="cover"
+                            />
+                        </TouchableOpacity>
                     ) : (
                         <Text style={styles.messageText}>{item.text}</Text>
+                    )}
+                    {/* Timestamp for sequence messages */}
+                    {isSequence && (
+                        <Text style={styles.sequenceTimestamp}>
+                            {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
                     )}
                     {/* Status Indicator */}
                     {isMe && (
@@ -379,6 +410,9 @@ export default function ChatScreen({ navigation, route }: any) {
                             onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })} // Scroll on layout change (keyboard)
                             ListEmptyComponent={
                                 <Text style={{ color: '#64748b', textAlign: 'center', marginTop: 20 }}>No messages yet. Say hi!</Text>
+                            }
+                            ListFooterComponent={
+                                <View style={{ height: 120 }} />
                             }
                         />
                     </Animated.View>
@@ -460,6 +494,35 @@ export default function ChatScreen({ navigation, route }: any) {
                 members={members}
                 currentUserId={currentUser?._id}
             />
+
+            {/* Image Preview Modal */}
+            <Modal
+                visible={!!previewImageUrl}
+                transparent={true}
+                onRequestClose={() => setPreviewImageUrl(null)}
+            >
+                <TouchableOpacity
+                    style={styles.imagePreviewOverlay}
+                    activeOpacity={1}
+                    onPress={() => setPreviewImageUrl(null)}
+                >
+                    <SafeAreaView style={styles.imagePreviewContainer}>
+                        <TouchableOpacity
+                            style={styles.closePreviewButton}
+                            onPress={() => setPreviewImageUrl(null)}
+                        >
+                            <Ionicons name="close" size={30} color="#fff" />
+                        </TouchableOpacity>
+                        {previewImageUrl && (
+                            <Image
+                                source={{ uri: previewImageUrl }}
+                                style={styles.previewFullImage}
+                                resizeMode="contain"
+                            />
+                        )}
+                    </SafeAreaView>
+                </TouchableOpacity>
+            </Modal>
 
             {/* Connection Status Indicator */}
             {!socketConnected && (
@@ -543,14 +606,14 @@ const styles = StyleSheet.create({
     listContent: {
         paddingVertical: 16,
         paddingHorizontal: 16,
-        paddingBottom: 160, // Increased to prevent overlap with input bar
+        paddingBottom: 100,
     },
     messageRow: {
         flexDirection: 'row',
         marginBottom: 30,
     },
     sequenceRow: {
-        marginBottom: 25,
+        marginBottom: 5,
         marginTop: -10,
     },
     avatarContainer: {
@@ -583,6 +646,12 @@ const styles = StyleSheet.create({
     timestamp: {
         color: '#64748b',
         fontSize: 11,
+    },
+    sequenceTimestamp: {
+        color: '#64748b',
+        fontSize: 10,
+        alignSelf: 'flex-end',
+        marginTop: 4,
     },
     messageText: {
         color: '#e2e8f0',
@@ -655,5 +724,28 @@ const styles = StyleSheet.create({
     statusContainer: {
         alignSelf: 'flex-end',
         marginTop: 4,
-    }
+    },
+    imagePreviewOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    imagePreviewContainer: {
+        flex: 1,
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closePreviewButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        zIndex: 10,
+        padding: 10,
+    },
+    previewFullImage: {
+        width: '100%',
+        height: '100%',
+    },
 });
