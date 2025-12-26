@@ -3,10 +3,11 @@ import { Schema, Types, model } from "mongoose";
 export interface IAuth {
     _id: Types.ObjectId,
     name: string,
-    email: string, 
+    email: string,
     password: string,
     salt: string,
     isVerified: boolean,
+    expoPushToken?: string,
 }
 
 const authSchema: Schema = new Schema({
@@ -29,7 +30,11 @@ const authSchema: Schema = new Schema({
     isVerified: {
         type: Boolean,
         default: false,
+    },
+    expoPushToken: {
+        type: String,
+        default: null,
     }
-}, { timestamps: true } );
+}, { timestamps: true });
 
 export default model<IAuth>("Auth", authSchema);

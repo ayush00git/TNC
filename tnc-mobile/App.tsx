@@ -18,9 +18,29 @@ import { ToastProvider } from './context/ToastContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator, View } from 'react-native';
 import { useState, useEffect } from 'react';
+import { usePushNotifications } from './hooks/usePushNotifications';
+import client from './services/client';
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
+
+  const { expoPushToken } = usePushNotifications();
+
+  useEffect(() => {
+    const syncPushToken = async () => {
+      if (!expoPushToken) return;
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          await client.post('/api/auth/save-token', { token: expoPushToken });
+          // console.log("Push token synced with backend");
+        }
+      } catch (e) {
+        console.error("Failed to sync push token:", e);
+      }
+    };
+    syncPushToken();
+  }, [expoPushToken]);
 
   useEffect(() => {
     const checkToken = async () => {

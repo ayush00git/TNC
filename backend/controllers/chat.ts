@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { uploadToS3 } from "../services/s3Bucket";
 import Chat from "../models/chat";
+import Room from "../models/room";
 import { isValidObjectId } from "mongoose";
+import { Expo } from "expo-server-sdk";
 
 export const sendChat = async (req: Request, res: Response) => {
     try {
@@ -33,6 +35,46 @@ export const sendChat = async (req: Request, res: Response) => {
         } else {
             console.warn("Socket.io instance not found in request app");
         }
+
+        // Send Push Notifications
+        try {
+            const roomDoc = await Room.findById(roomId).populate("members", "expoPushToken");
+            const senderName = (req.user as any)?.name || "Someone";
+
+            if (roomDoc) {
+                const pushTokens: string[] = [];
+                roomDoc.members.forEach((member: any) => {
+                    if (member._id.toString() !== sender && member.expoPushToken) {
+                        pushTokens.push(member.expoPushToken);
+                    }
+                });
+
+                if (pushTokens.length > 0) {
+                    const expo = new Expo();
+                    const messages = pushTokens
+                        .filter(token => Expo.isExpoPushToken(token))
+                        .map(token => ({
+                            to: token,
+                            sound: 'default',
+                            title: `New message in #${roomDoc.title}`,
+                            body: `${senderName}: ${text || 'Sent an image'}`,
+                            data: { roomId: roomId, roomTitle: roomDoc.title },
+                        }));
+
+                    const chunks = expo.chunkPushNotifications(messages as any);
+                    for (const chunk of chunks) {
+                        try {
+                            await expo.sendPushNotificationsAsync(chunk);
+                        } catch (error) {
+                            console.error("Error sending push notification chunk:", error);
+                        }
+                    }
+                }
+            }
+        } catch (notifError) {
+            console.error("Error processing notifications:", notifError);
+        }
+
         return res.status(200).json(populatedMessage);
     } catch (error) {
         console.error(`Error in sending the message:`, error);
