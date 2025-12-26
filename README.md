@@ -7,9 +7,18 @@ A real-time chat application designed for tech enthusiasts to connect, discuss, 
 This monorepo contains:
 - **`tnc-mobile`**: The React Native mobile application (Expo).
 - **`backend`**: The Node.js/Express server with MongoDB and Socket.io.
-- **`frontend`**: (Optional/Legacy) Web frontend interface.
+- **`frontend`**: The React-based web interface for desktop users.
 
 ## Tech Stack
+
+### Web App (Frontend)
+- **Framework**: React (Vite)
+- **Language**: TypeScript
+- **Styling**: TailwindCSS
+- **State Management**: Redux Toolkit
+- **Routing**: React Router DOM
+- **Real-time**: Socket.io Client
+- **Icons**: Lucide React
 
 ### Mobile App
 - **Framework**: React Native with Expo
@@ -24,17 +33,17 @@ This monorepo contains:
 - **Runtime**: Node.js
 - **Framework**: Express.js
 - **Database**: MongoDB (Mongoose)
-- **Real-time**: Socket.io (Ready for integration)
 - **Authentication**: JWT & Cookies
 - **Email**: Nodemailer (Gmail SMTP)
 
 ## Features
 
+- **Cross-Platform**: Seamless experience on both Web and Mobile.
 - **Authentication**: Sign Up, Login, and Forgot Password (via OTP/Link).
-- **Rooms**: specialized chat rooms (Blockchain, AI/ML, Frontend, etc.).
-- **Real-time Chat**: Instant messaging in rooms.
+- **Rooms**: Specialized chat rooms (Blockchain, AI/ML, Frontend, etc.).
+- **Real-time Chat**: Instant messaging in rooms with live updates.
 - **Rich Media**: Image and Code snippet sharing.
-- **Persistent Logic**: Auto-login via Async Storage tokens.
+- **Persistent Logic**: Auto-login via Async Storage (Mobile) and Cookies (Web).
 - **Modern UI**: Dark mode aesthetic with custom Toast notifications.
 
 ## Getting Started
@@ -52,7 +61,15 @@ npm install
 npm run dev
 ```
 
-### 2. Mobile Setup
+### 2. Web App Setup
+```bash
+cd frontend
+npm install
+# Create .env file (VITE_API_URL=http://localhost:8001, etc.)
+npm run dev
+```
+
+### 3. Mobile Setup
 ```bash
 cd tnc-mobile
 npm install
