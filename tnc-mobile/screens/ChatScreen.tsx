@@ -433,21 +433,22 @@ export default function ChatScreen({ navigation, route }: any) {
                     </View>
                 )}
                 <View style={styles.inputWrapper}>
-                    <TouchableOpacity
-                        style={styles.attachButton}
-                        onPress={() => setShowAttachmentModal(true)}
-                    >
-                        <Feather name="plus" size={24} color="#64748b" />
-                    </TouchableOpacity>
-
-                    <TextInput
-                        style={styles.input}
-                        value={text}
-                        onChangeText={setText}
-                        placeholder={`Message #${roomTitle}`}
-                        placeholderTextColor="#64748b"
-                        multiline
-                    />
+                    <View style={styles.combinedInput}>
+                        <TextInput
+                            style={styles.input}
+                            value={text}
+                            onChangeText={setText}
+                            placeholder={`Message #${roomTitle}`}
+                            placeholderTextColor="#64748b"
+                            multiline
+                        />
+                        <TouchableOpacity
+                            style={styles.attachButton}
+                            onPress={() => setShowAttachmentModal(true)}
+                        >
+                            <Feather name="plus" size={24} color="#64748b" />
+                        </TouchableOpacity>
+                    </View>
 
                     <TouchableOpacity
                         style={[
@@ -675,27 +676,32 @@ const styles = StyleSheet.create({
         paddingTop: 12,
         paddingBottom: 8,
     },
-    attachButton: {
-        padding: 10,
-        marginRight: 8,
-    },
-    input: {
+    combinedInput: {
         flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#0A0514',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
         borderRadius: 20,
+        paddingRight: 4,
+    },
+    input: {
+        flex: 1,
         color: '#fff',
         paddingHorizontal: 16,
         paddingTop: 10,
         paddingBottom: 10,
         maxHeight: 100,
-        fontSize: 15,
+        fontSize: 17,
+    },
+    attachButton: {
+        padding: 8,
     },
     sendButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 45,
+        height: 45,
+        borderRadius: 30,
         backgroundColor: '#1A1625',
         alignItems: 'center',
         justifyContent: 'center',

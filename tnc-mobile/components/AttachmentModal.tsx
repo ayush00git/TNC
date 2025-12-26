@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     modalContent: {
         position: 'absolute',
         bottom: 90, // Approx height of input bar (50) + safe area (variable) + margin
-        left: 20, // Approx margin of + button
+        right: 20, // Aligned with attachment button (which is near send button)
         backgroundColor: '#1A1625',
         borderRadius: 24,
         padding: 8,
