@@ -1,5 +1,6 @@
 import express from "express";
 import { handleUserSignUp, handleUserLogIn, handlerForgetPassViaEmail, handleForgetPassViaOld, changeUserPass, handleVerifyEmail } from "../controllers/auth";
+import { savePushToken } from "../controllers/notification";
 
 export const authRoute = express.Router();
 
@@ -9,3 +10,4 @@ authRoute.post('/forget-password/viaOldPass', handleForgetPassViaOld);
 authRoute.post('/forget-password/viaEmail', handlerForgetPassViaEmail)
 authRoute.post('/reset-password', changeUserPass);
 authRoute.get('/verify-acc', handleVerifyEmail);
+authRoute.post('/save-token', savePushToken);
