@@ -94,11 +94,12 @@ export const handleUserLogIn = async (req: Request, res: Response) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
       message: "Logged in success",
+      token,
       user: {
         _id: existingUser._id,
         name: existingUser.name,
@@ -170,7 +171,7 @@ export const handlerForgetPassViaEmail = async (
         .status(400)
         .json({ message: "Email couldn't be sent at the moment" });
     }
-    return res.status(200).json({ message: "Email sent successfully" });
+    return res.status(200).json({ message: `Reset link sent to your email` });
   } catch (error) {
     console.log(`${error}`);
     throw new Error(`While user tried to change pass via email`);
