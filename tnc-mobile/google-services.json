@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "670523976720",
+    "project_id": "tnc-ayushz-me",
+    "storage_bucket": "tnc-ayushz-me.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:670523976720:android:1ebbec33bb800b32a7ae95",
+        "android_client_info": {
+          "package_name": "com.ayush00git.tncmobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDO7ha5C7qx-ITRod0_enh5pTrM1lpTEO4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

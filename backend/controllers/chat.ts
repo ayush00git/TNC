@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { uploadToS3 } from "../services/s3Bucket";
 import Chat from "../models/chat";
+import Room from "../models/room";
 import { isValidObjectId } from "mongoose";
+import { Expo } from "expo-server-sdk";
 
 export const sendChat = async (req: Request, res: Response) => {
     try {
@@ -14,6 +16,17 @@ export const sendChat = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "message can't be sent empty" });
         }
 
+        let room;
+        if (isValidObjectId(roomId)) {
+            room = await Room.findById(roomId);
+        } else {
+            room = await Room.findOne({ roomId: roomId });
+        }
+
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+
         let imageUrl: string | undefined;
         if (image) {
             imageUrl = await uploadToS3(image);
@@ -23,7 +36,7 @@ export const sendChat = async (req: Request, res: Response) => {
         const chatMessage = await Chat.create({
             sender,
             text,
-            room: roomId,
+            room: room._id, // Use the resolved MongoDB _id
             imageURL: imageUrl,
         })
         const populatedMessage = await chatMessage.populate("sender", "name email");
@@ -33,6 +46,46 @@ export const sendChat = async (req: Request, res: Response) => {
         } else {
             console.warn("Socket.io instance not found in request app");
         }
+
+        // Send Push Notifications
+        try {
+            const roomDoc = await Room.findById(room._id).populate("members", "expoPushToken");
+            const senderName = (req.user as any)?.name || "Someone";
+
+            if (roomDoc) {
+                const pushTokens: string[] = [];
+                roomDoc.members.forEach((member: any) => {
+                    if (member._id.toString() !== sender && member.expoPushToken) {
+                        pushTokens.push(member.expoPushToken);
+                    }
+                });
+
+                if (pushTokens.length > 0) {
+                    const expo = new Expo();
+                    const messages = pushTokens
+                        .filter(token => Expo.isExpoPushToken(token))
+                        .map(token => ({
+                            to: token,
+                            sound: 'default',
+                            title: `New message in #${roomDoc.title}`,
+                            body: `${senderName}: ${text || 'Sent an image'}`,
+                            data: { roomId: roomId, roomTitle: roomDoc.title },
+                        }));
+
+                    const chunks = expo.chunkPushNotifications(messages as any);
+                    for (const chunk of chunks) {
+                        try {
+                            const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+                        } catch (error) {
+                            console.error("[DEBUG] Error sending push notification chunk:", error);
+                        }
+                    }
+                }
+            }
+        } catch (notifError) {
+            console.error("[DEBUG] Error processing notifications:", notifError);
+        }
+
         return res.status(200).json(populatedMessage);
     } catch (error) {
         console.error(`Error in sending the message:`, error);
