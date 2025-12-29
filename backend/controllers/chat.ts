@@ -47,18 +47,35 @@ export const sendChat = async (req: Request, res: Response) => {
             console.warn("Socket.io instance not found in request app");
         }
 
-        // Send Push Notifications
+        // Send Push Notifications (only to offline users)
         try {
             const roomDoc = await Room.findById(room._id).populate("members", "expoPushToken");
             const senderName = (req.user as any)?.name || "Someone";
 
-            if (roomDoc) {
+            if (roomDoc && io) {
+                // Get list of connected socket IDs in this room
+                const socketsInRoom = await io.in(roomId).fetchSockets();
+                const connectedUserIds = new Set<string>();
+
+                // Extract user IDs from connected sockets
+                socketsInRoom.forEach((socket: any) => {
+                    if (socket.userId) {
+                        connectedUserIds.add(socket.userId.toString());
+                    }
+                });
+
+                console.log(`[DEBUG] Connected users in room: ${connectedUserIds.size}`);
+
                 const pushTokens: string[] = [];
                 roomDoc.members.forEach((member: any) => {
-                    if (member._id.toString() !== sender && member.expoPushToken) {
+                    const memberId = member._id.toString();
+                    // Only send to users who are NOT the sender AND NOT currently connected
+                    if (memberId !== sender && !connectedUserIds.has(memberId) && member.expoPushToken) {
                         pushTokens.push(member.expoPushToken);
                     }
                 });
+
+                console.log(`[DEBUG] Offline users to notify: ${pushTokens.length}`);
 
                 if (pushTokens.length > 0) {
                     const expo = new Expo();
@@ -76,6 +93,7 @@ export const sendChat = async (req: Request, res: Response) => {
                     for (const chunk of chunks) {
                         try {
                             const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+                            console.log(`[DEBUG] Notification sent to ${chunk.length} offline users`);
                         } catch (error) {
                             console.error("[DEBUG] Error sending push notification chunk:", error);
                         }
