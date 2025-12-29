@@ -140,9 +140,66 @@ export default function ChatScreen({ navigation, route }: any) {
         }
     }, [messages]); // Re-run whenever messages array changes
 
+    // Date separator helper functions
+    const getDateLabel = (timestamp: string | Date): string => {
+        const messageDate = new Date(timestamp);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        // Reset time to midnight for comparison
+        const resetTime = (date: Date) => {
+            date.setHours(0, 0, 0, 0);
+            return date;
+        };
+
+        const messageDateOnly = resetTime(new Date(messageDate));
+        const todayOnly = resetTime(new Date(today));
+        const yesterdayOnly = resetTime(new Date(yesterday));
+
+        if (messageDateOnly.getTime() === todayOnly.getTime()) {
+            return 'Today';
+        } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
+            return 'Yesterday';
+        } else {
+            // Format as "Dec 25, 2024"
+            return messageDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+    };
+
+    const groupMessagesWithDates = (messages: Message[]): any[] => {
+        if (!messages || messages.length === 0) return [];
+
+        const grouped: any[] = [];
+        let lastDate: string | null = null;
+
+        messages.forEach((message) => {
+            const dateLabel = getDateLabel(message.createdAt);
+
+            // Insert date separator if date changed
+            if (dateLabel !== lastDate) {
+                grouped.push({
+                    type: 'date-separator',
+                    id: `date-${message.createdAt}`,
+                    label: dateLabel
+                });
+                lastDate = dateLabel;
+            }
+
+            // Add the actual message
+            grouped.push({ ...message, type: 'message' });
+        });
+
+        return grouped;
+    };
 
 
     // Fetch Messages
+
     const fetchMessages = async () => {
         if (!roomMongoId) return; // Need actual _id for chat
         try {
@@ -176,7 +233,10 @@ export default function ChatScreen({ navigation, route }: any) {
                 setSocketConnected(false);
             });
 
-            socketRef.current.emit("join_room", roomMongoId);
+            socketRef.current.emit("join_room", {
+                room: roomMongoId,
+                userId: currentUser?._id
+            });
 
 
 
@@ -302,13 +362,28 @@ export default function ChatScreen({ navigation, route }: any) {
     };
 
     // Render a single message item
-    const renderItem = ({ item, index }: { item: Message; index: number }) => {
+    const renderItem = ({ item, index }: { item: any; index: number }) => {
+        // Handle date separator
+        if (item.type === 'date-separator') {
+            return (
+                <View style={styles.dateSeparatorContainer}>
+                    <View style={styles.dateSeparatorLine} />
+                    <Text style={styles.dateSeparatorText}>{item.label}</Text>
+                    <View style={styles.dateSeparatorLine} />
+                </View>
+            );
+        }
+
+        // Handle regular message
         // Check if message is from current user
         const isMe = (currentUser && item.sender)
             ? String(item.sender._id || item.sender) === String(currentUser._id)
             : false;
 
-        const prevMessage = messages[index - 1];
+        const groupedMessages = groupMessagesWithDates(messages);
+        const prevItem = groupedMessages[index - 1];
+        const prevMessage = prevItem?.type === 'message' ? prevItem : null;
+
         const isSequence = prevMessage && prevMessage.sender && item.sender &&
             String(prevMessage.sender._id || prevMessage.sender) === String(item.sender._id || item.sender);
 
@@ -401,9 +476,9 @@ export default function ChatScreen({ navigation, route }: any) {
                     <Animated.View style={{ flex: 1, marginBottom: keyboardHeight }}>
                         <FlatList
                             ref={flatListRef}
-                            data={messages}
+                            data={groupMessagesWithDates(messages)}
                             renderItem={renderItem}
-                            keyExtractor={item => item._id}
+                            keyExtractor={item => item.id || item._id}
                             contentContainerStyle={styles.listContent}
                             style={styles.list}
                             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -753,5 +828,24 @@ const styles = StyleSheet.create({
     previewFullImage: {
         width: '100%',
         height: '100%',
+    },
+    dateSeparatorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 16,
+        paddingHorizontal: 16,
+    },
+    dateSeparatorLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    dateSeparatorText: {
+        color: '#64748b',
+        fontSize: 12,
+        fontWeight: '600',
+        marginHorizontal: 12,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
 });
