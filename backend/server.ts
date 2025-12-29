@@ -23,9 +23,24 @@ import { allowOnlyAuthenticatedUser } from "./middlewares/auth";
 const app = express();
 const server = createServer(app);
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://13.202.26.208",
+  "https://tnc.ayushz.me",
+]
+
 const io = new Server(server, {
   cors: {
-    origin: `http://localhost:5173`,
+    origin: (origin, callback) => {
+      if( !origin ) return callback(null, true); // for mobile app as they have no origin
+
+      if( allowedOrigins.includes(origin) ) { 
+        callback(null, true);
+      } else {
+        console.log("Socket blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true,
   }
@@ -47,9 +62,18 @@ connectToMongo(mongoUri)
   );
 
 app.use(cors({
-  origin: ["http://13.202.26.208", "http://localhost:5173"],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // for mobile app as they have no origin
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("API blocked by CORS:", origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-}))
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -58,7 +82,7 @@ app.use(cookieParser());
 app.get("/", allowOnlyAuthenticatedUser, (req, res) => {
   return res
     .status(200)
-    .json({ message: "Hey the server is in development phase" });
+    .json({ message: "Hey welcome to the TNC server" });
 });
 
 app.use('/api/chat', allowOnlyAuthenticatedUser, chatRoute);
