@@ -218,6 +218,63 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
     effectiveUserRef.current = effectiveUser;
   }, [effectiveUser]);
 
+  // Date separator helper functions
+  const getDateLabel = (timestamp: string | Date): string => {
+    const messageDate = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time to midnight for comparison
+    const resetTime = (date: Date) => {
+      date.setHours(0, 0, 0, 0);
+      return date;
+    };
+
+    const messageDateOnly = resetTime(new Date(messageDate));
+    const todayOnly = resetTime(new Date(today));
+    const yesterdayOnly = resetTime(new Date(yesterday));
+
+    if (messageDateOnly.getTime() === todayOnly.getTime()) {
+      return 'Today';
+    } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
+      return 'Yesterday';
+    } else {
+      // Format as "Dec 25, 2024"
+      return messageDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+  };
+
+  const groupMessagesWithDates = (messages: Message[]): any[] => {
+    if (!messages || messages.length === 0) return [];
+
+    const grouped: any[] = [];
+    let lastDate: string | null = null;
+
+    messages.forEach((message) => {
+      const dateLabel = getDateLabel(message.createdAt);
+
+      // Insert date separator if date changed
+      if (dateLabel !== lastDate) {
+        grouped.push({
+          type: 'date-separator',
+          id: `date-${message.createdAt}`,
+          label: dateLabel
+        });
+        lastDate = dateLabel;
+      }
+
+      // Add the actual message
+      grouped.push({ ...message, type: 'message' });
+    });
+
+    return grouped;
+  };
+
   const handleImageSelect = (dataUrl: string) => {
 
     setImagePreviewUrl(dataUrl);
@@ -629,7 +686,22 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
           </p>
         </div>
 
-        {messages.map((msg, idx) => {
+        {groupMessagesWithDates(messages).map((item, idx) => {
+          // Handle date separator
+          if (item.type === 'date-separator') {
+            return (
+              <div key={item.id} className="flex items-center gap-4 my-6">
+                <div className="flex-1 h-px bg-white/10"></div>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  {item.label}
+                </span>
+                <div className="flex-1 h-px bg-white/10"></div>
+              </div>
+            );
+          }
+
+          // Handle regular message
+          const msg = item;
           // Adjust user lookup for real data structure
           const user = msg.sender || {
             id: "unknown",
@@ -641,7 +713,10 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
           // IMPORTANT: Check ID types (string vs number)
           const isMe = (user.id === effectiveUser.id || user._id === effectiveUser.id) && user.id !== "unknown";
 
-          const prevMsg = messages[idx - 1];
+          const groupedMessages = groupMessagesWithDates(messages);
+          const prevItem = groupedMessages[idx - 1];
+          const prevMsg = prevItem?.type === 'message' ? prevItem : null;
+
           // Check sender ID consistency
           const prevSenderId = prevMsg?.sender?.id || prevMsg?.sender?._id || prevMsg?.userId;
           const currentSenderId = user.id || user._id;
