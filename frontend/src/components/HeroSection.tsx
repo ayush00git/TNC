@@ -28,9 +28,9 @@ export default function HeroSection() {
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                        The Network for <br />
+                        The Nerds <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
-                            Creative Developers
+                            Community
                         </span>
                     </h1>
 

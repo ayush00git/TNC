@@ -3,7 +3,11 @@ import RoomSidebar from "../components/RoomSidebar";
 import ChatWindow from "../components/ChatWindow";
 import { useParams } from "react-router-dom";
 
-export default function ChatInterface() {
+interface ChatInterfaceProps {
+  setCurrentRoom: (roomId: string | null) => void;
+}
+
+export default function ChatInterface({ setCurrentRoom }: ChatInterfaceProps) {
   const { roomId } = useParams<{ roomId: string }>();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
 
@@ -16,6 +20,7 @@ export default function ChatInterface() {
       <ChatWindow
         roomId={roomId}
         onOpenSidebar={() => setIsMobileSidebarOpen(true)}
+        setCurrentRoom={setCurrentRoom}
       />
     </div>
   );

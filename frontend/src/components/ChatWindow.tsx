@@ -20,6 +20,7 @@ import CodeModal from "./CodeModal";
 import ImageModal from "./ImageModal";
 import { socket } from "../services/socket";
 import axios from "axios";
+import { useBrowserNotifications } from "../hooks/useBrowserNotifications";
 
 // --- Types ---
 interface User {
@@ -59,6 +60,7 @@ interface RoomDetails {
 interface ChatWindowProps {
   roomId?: string;
   onOpenSidebar?: () => void;
+  setCurrentRoom: (roomId: string | null) => void;
 }
 
 // --- Mock Database (used for fallback) ---
@@ -181,7 +183,7 @@ const MemberModal = ({
   );
 };
 
-export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
+export default function ChatWindow({ roomId, onOpenSidebar, setCurrentRoom }: ChatWindowProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [activeRoom, setActiveRoom] = useState<RoomDetails | null>(null);
@@ -202,6 +204,9 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
   const optionsMenuRef = useRef<HTMLDivElement>(null);
 
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+
+  // Browser notifications
+  const { permission, requestPermission, showNotification } = useBrowserNotifications();
 
   const allMembers = useMemo(() => {
     const members: User[] = activeRoom?.members ? [...activeRoom.members] : [];
@@ -317,6 +322,22 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
     }
   }, []);
 
+  // Request notification permission on mount
+  useEffect(() => {
+    if (permission === 'default') {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  // Track current room for global notifications
+  useEffect(() => {
+    if (activeRoom?._id) {
+      setCurrentRoom(activeRoom._id);
+    } else {
+      setCurrentRoom(null);
+    }
+  }, [activeRoom, setCurrentRoom]);
+
   // Fetch Room & Messages
   useEffect(() => {
     if (!roomId) {
@@ -415,6 +436,16 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
             newMessages[existingIndex] = formattedMsg;
             return newMessages;
           }
+        } else {
+          // Message from another user - show browser notification
+          const senderName = newMessage.sender?.name || "Someone";
+          const messagePreview = newMessage.text || "Sent an image";
+
+          showNotification(`${senderName} in #${activeRoom?.title || 'Chat'}`, {
+            body: messagePreview,
+            tag: activeRoom?._id || 'chat',
+            data: { roomId: activeRoom?._id, roomTitle: activeRoom?.title },
+          });
         }
         return [...prev, formattedMsg];
       });

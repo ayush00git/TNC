@@ -7,8 +7,26 @@ import ForgotPassword from "./Pages/ForgotPassword";
 import VerifyEmail from "./Pages/VerifyEmail";
 import ResetPassword from "./Pages/ResetPassword";
 import HomePage from "./Pages/HomePage";
+import { useEffect, useState } from "react";
+import { useGlobalNotifications } from "./hooks/useGlobalNotifications";
 
 function App() {
+  const [currentUser, setCurrentUser] = useState<{ _id: string } | null>(null);
+  const { setCurrentRoom } = useGlobalNotifications(currentUser?._id || null);
+
+  // Load current user from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("authUser");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setCurrentUser({ _id: parsed._id });
+      }
+    } catch (error) {
+      console.error("Failed to load user:", error);
+    }
+  }, []);
+
   return (
     <>
       <Routes>
@@ -17,8 +35,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/join-room" element={<JoinActiveRoom />} />
-        <Route path="/room" element={<ChatInterface />} />
-        <Route path="/room/:roomId" element={<ChatInterface />} />
+        <Route path="/room" element={<ChatInterface setCurrentRoom={setCurrentRoom} />} />
+        <Route path="/room/:roomId" element={<ChatInterface setCurrentRoom={setCurrentRoom} />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
