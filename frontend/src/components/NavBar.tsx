@@ -1,10 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Github, Menu, X, Terminal } from 'lucide-react';
+import { Github, Menu, X, Terminal, MessageSquare } from 'lucide-react';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const authUser = localStorage.getItem("authUser");
+      setIsAuthenticated(!!authUser);
+    };
+
+    checkAuth();
+    // Listen for storage events in case it changes in another tab, 
+    // though for single tab navigation, re-renders or window-events are needed.
+    // For now, simple check on mount is standard for this codebase style.
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
 
   // Helper to check active state for styling
   const isActive = (path: string) => location.pathname === path;
@@ -34,21 +49,33 @@ export default function Navbar() {
             Blogs
           </Link>
 
-          <Link
-            to="/login"
-            className={`text-sm font-medium transition-colors ${isActive('/login') ? 'text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            Login
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              to="/room/yaps"
+              className={`flex items-center gap-2 text-sm font-medium transition-colors ${isActive('/join-room') ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              <MessageSquare size={16} />
+              Yaps Room
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className={`text-sm font-medium transition-colors ${isActive('/login') ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                Login
+              </Link>
 
-          <Link
-            to="/signup"
-            className={`text-sm font-medium transition-colors ${isActive('/signup') ? 'text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            Sign Up
-          </Link>
+              <Link
+                to="/signup"
+                className={`text-sm font-medium transition-colors ${isActive('/signup') ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
 
-          <div className="h-4 w-[1px] bg-white/10 mx-2" />
+          <div className="h-4 w-px bg-white/10 mx-2" />
 
           {/* Github Link */}
           <a
@@ -93,8 +120,17 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-20 left-0 w-full bg-[#060010] border-b border-white/10 p-6 flex flex-col gap-4 animate-in slide-in-from-top-5 duration-200">
           <Link to="/blogs" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Blogs</Link>
-          <Link to="/login" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
-          <Link to="/signup" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
+          {isAuthenticated ? (
+            <Link to="/join-room" className="text-slate-300 hover:text-white py-2 flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+              <MessageSquare size={16} />
+              Yaps Room
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+              <Link to="/signup" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
+            </>
+          )}
           <Link to="/contact-us" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Contact Us</Link>
           <div className="h-[1px] bg-white/10 w-full my-2" />
           <div className="flex items-center gap-6 pt-2">
