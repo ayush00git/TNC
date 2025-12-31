@@ -5,9 +5,7 @@ export interface IBlog {
 	user: Types.ObjectId,
 	title: string,
 	excerpt: string,
-	readTime: string,
 	tags: string[],
-	color: string,
 	content: string,
 }
 
@@ -24,16 +22,8 @@ const blogSchema: Schema = new Schema({
 		type: String,
 		required: true,
 	},
-	readTime: {
-		type: String,
-		default: "5 min",
-	},
 	tags: {
 		type: [String],
-	},
-	color: {
-		type: String,
-		default: "#ff0080",
 	},
 	content: {
 		type: String,
