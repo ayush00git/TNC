@@ -28,6 +28,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://13.202.26.208",
   "https://tnc.ayushz.me",
+  "https://ayushz.me",
+  "https://www.ayushz.me",
 ]
 
 const io = new Server(server, {
