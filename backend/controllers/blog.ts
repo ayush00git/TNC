@@ -12,7 +12,7 @@ export const getBlogsHandler = async (req: Request, res: Response) => {
 };
 
 export const postBlogHandler = async (req: Request, res: Response) => {
-	const { title, excerpt, date, readTime, tags, color, content } = req.body;
+	const { title, excerpt, readTime, tags, color, content } = req.body;
 	const userId = req.user;
 		
 	if( !title || !excerpt || !content ) {
@@ -24,7 +24,6 @@ export const postBlogHandler = async (req: Request, res: Response) => {
 			user: userId,
 			title,
 			excerpt,
-			date,
 			readTime,
 			tags,
 			color,

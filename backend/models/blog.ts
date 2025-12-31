@@ -5,7 +5,6 @@ export interface IBlog {
 	user: Types.ObjectId,
 	title: string,
 	excerpt: string,
-	date: string,
 	readTime: string,
 	tags: string[],
 	color: string,
@@ -24,10 +23,6 @@ const blogSchema: Schema = new Schema({
 	excerpt: {
 		type: String,
 		required: true,
-	},
-	date: {
-		type: String,
-		default: Date.now,
 	},
 	readTime: {
 		type: String,
