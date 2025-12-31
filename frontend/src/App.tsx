@@ -9,6 +9,8 @@ import ResetPassword from "./Pages/ResetPassword";
 import HomePage from "./Pages/HomePage";
 import { useEffect, useState } from "react";
 import { useGlobalNotifications } from "./hooks/useGlobalNotifications";
+import BlogsPage from "./Pages/BlogsPage";
+import WriteBlog from "./Pages/WriteBlog";
 
 function App() {
   const [currentUser, setCurrentUser] = useState<{ _id: string } | null>(null);
@@ -39,6 +41,8 @@ function App() {
         <Route path="/room/:roomId" element={<ChatInterface setCurrentRoom={setCurrentRoom} />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/blogs" element={<BlogsPage />} />
+        <Route path="/write-blog" element={<WriteBlog />} />
       </Routes>
     </>
   );
