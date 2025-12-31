@@ -16,6 +16,7 @@ import { chatRoute } from "./routes/chat"
 import { authRoute } from "./routes/auth";
 import { roomRoute } from "./routes/room";
 import { featureRoute } from "./routes/feature";
+import { blogRoute } from "./routes/blog";
 
 // middlewares
 import { allowOnlyAuthenticatedUser } from "./middlewares/auth";
@@ -27,6 +28,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://13.202.26.208",
   "https://tnc.ayushz.me",
+  "https://ayushz.me",
+  "https://www.ayushz.me",
 ]
 
 const io = new Server(server, {
@@ -89,6 +92,7 @@ app.use('/api/chat', allowOnlyAuthenticatedUser, chatRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/room', allowOnlyAuthenticatedUser, roomRoute);
 app.use('/api/features', featureRoute);
+app.use('/api/blog', blogRoute);
 
 const PORT = process.env.PORT || 8000;
 

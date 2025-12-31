@@ -1,0 +1,223 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, X, Save, AlertCircle } from 'lucide-react';
+import Navbar from '../components/NavBar';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+
+const WriteBlog = () => {
+    const navigate = useNavigate();
+    const [title, setTitle] = useState('');
+    const [excerpt, setExcerpt] = useState('');
+    const [content, setContent] = useState('');
+    const [tags, setTags] = useState<string[]>([]);
+    const [currentTag, setCurrentTag] = useState('');
+    const [viewMode, setViewMode] = useState<'write' | 'preview'>('write');
+    const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentTag.trim() && tags.length < 4 && !tags.includes(currentTag.trim())) {
+                setTags([...tags, currentTag.trim()]);
+                setCurrentTag('');
+            }
+        } else if (e.key === 'Backspace' && !currentTag && tags.length > 0) {
+            setTags(tags.slice(0, -1));
+        }
+    };
+
+    const removeTag = (tagToRemove: string) => {
+        setTags(tags.filter(tag => tag !== tagToRemove));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+
+        if (!title || !excerpt || !content) {
+            setError('Please fill in all required fields');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch('/api/blog', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title,
+                    excerpt,
+                    tags,
+                    content,
+                }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Failed to publish blog');
+            }
+
+            navigate('/blogs');
+        } catch (err: any) {
+            setError(err.message || 'Something went wrong');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-sans selection:bg-white selection:text-black">
+            <Navbar />
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pt-32 pb-20">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-24 border-b border-[#30363d] pb-8">
+                    <button
+                        onClick={() => navigate('/blogs')}
+                        className="flex items-center gap-2 text-[#8b949e] hover:text-white transition-colors group"
+                    >
+                        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                        <span className="font-mono uppercase text-sm tracking-wider">Abort & Return</span>
+                    </button>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#ff0080] rounded-full"></div>
+                        <span className="font-mono text-xs text-[#ff0080] uppercase tracking-widest">Write Mode</span>
+                    </div>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-16">
+                    {error && (
+                        <div className="bg-red-500/5 border border-red-500/20 text-red-400 p-4 font-mono text-sm flex items-center gap-3">
+                            <AlertCircle size={16} />
+                            <span>ERROR: {error}</span>
+                        </div>
+                    )}
+
+                    {/* Title */}
+                    <div className="space-y-4">
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="ENTRY TITLE_01"
+                            className="w-full bg-transparent border-b border-[#30363d] text-white text-5xl md:text-7xl font-black uppercase tracking-tight py-4 focus:outline-none focus:border-[#ff0080] transition-colors placeholder:text-[#30363d]"
+                        />
+                    </div>
+
+                    {/* Excerpt */}
+                    <div className="space-y-4">
+                        <label className="text-xs font-mono text-[#8b949e] uppercase tracking-widest block pl-4 border-l-2 border-[#ff0080]">Abstract / Description</label>
+                        <textarea
+                            value={excerpt}
+                            onChange={(e) => setExcerpt(e.target.value)}
+                            placeholder="Briefly describe this log entry..."
+                            className="w-full bg-transparent text-[#c9d1d9] text-xl md:text-2xl font-light p-4 h-32 resize-none focus:outline-none placeholder:text-[#30363d] leading-relaxed border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1"
+                        />
+                    </div>
+
+                    {/* Tags */}
+                    <div className="space-y-4">
+                        <label className="text-xs font-mono text-[#8b949e] uppercase tracking-widest block pl-4 border-l-2 border-[#00ffff]">Metadata Tags [{tags.length}/4]</label>
+                        <div className="w-full p-4 flex flex-wrap gap-3 items-center ml-1">
+                            {tags.map(tag => (
+                                <span key={tag} className="flex items-center gap-2 bg-[#161b22] border border-[#30363d] text-[#00ffff] px-3 py-1 text-xs font-mono uppercase tracking-wider">
+                                    {tag}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeTag(tag)}
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </span>
+                            ))}
+                            {tags.length < 4 && (
+                                <div className="flex items-center gap-2 text-[#8b949e] border-b border-[#30363d] focus-within:border-[#00ffff] focus-within:text-[#00ffff] transition-colors">
+                                    <span className="font-mono text-xs"></span>
+                                    <input
+                                        type="text"
+                                        value={currentTag}
+                                        onChange={(e) => setCurrentTag(e.target.value)}
+                                        onKeyDown={handleTagKeyDown}
+                                        placeholder="ADD_TAG"
+                                        className="bg-transparent border-none text-sm font-mono uppercase focus:outline-none w-[100px] py-1 placeholder:text-[#30363d]"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between border-l-2 border-[#00ff00] pl-4">
+                            <label className="text-xs font-mono text-[#8b949e] uppercase tracking-widest">Main Content</label>
+
+                            {/* Write / Preview Toggles */}
+                            <div className="flex gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('write')}
+                                    className={`text-xs font-mono uppercase tracking-widest transition-colors ${viewMode === 'write' ? 'text-[#00ff00] underline underline-offset-4' : 'text-[#30363d] hover:text-[#8b949e]'}`}
+                                >
+                                    [ Write ]
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('preview')}
+                                    className={`text-xs font-mono uppercase tracking-widest transition-colors ${viewMode === 'preview' ? 'text-[#00ff00] underline underline-offset-4' : 'text-[#30363d] hover:text-[#8b949e]'}`}
+                                >
+                                    [ Preview ]
+                                </button>
+                            </div>
+                        </div>
+
+                        {viewMode === 'write' ? (
+                            <textarea
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                placeholder="Begin log entry... (Markdown & HTML supported)"
+                                className="w-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-4 h-[600px] resize-y focus:outline-none placeholder:text-[#30363d] border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1"
+                            />
+                        ) : (
+                            <div className="w-full bg-[#0d1117]/50 p-8 h-[600px] overflow-y-auto border-l-2 border-[#30363d] ml-1">
+                                {content ? (
+                                    <div className="prose prose-invert prose-lg max-w-none">
+                                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                                            {content}
+                                        </ReactMarkdown>
+                                    </div>
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-[#30363d] font-mono text-sm uppercase tracking-widest">
+                                        No Data To Render
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Submit */}
+                    <div className="flex justify-end pt-12 border-t border-[#30363d]">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className={`group relative cursor-pointer px-8 py-4 bg-transparent border border-[#30363d] text-white font-mono uppercase tracking-widest text-sm hover:border-[#00ff00] hover:text-[#00ff00] transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                            <span className="absolute inset-0 bg-[#00ff00]/5 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                            <span className="relative flex items-center gap-3">
+                                <Save size={16} />
+                                {isSubmitting ? 'UPLOADING...' : 'COMMIT ENTRY'}
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default WriteBlog;
