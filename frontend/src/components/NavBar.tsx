@@ -77,6 +77,16 @@ export default function Navbar() {
 
           <div className="h-4 w-px bg-white/10 mx-2" />
 
+          {/* Get the App Link */}
+          <a
+            href="https://github.com/ayush00git/TNC/releases/download/v1.0.0/tnc-mobile-v1.0.0.apk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+          >
+            Get the App
+          </a>
+
           {/* Github Link */}
           <a
             href="https://github.com/ayush00git/TNC"
@@ -131,6 +141,9 @@ export default function Navbar() {
               <Link to="/signup" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
             </>
           )}
+          <a href="https://github.com/ayush00git" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 py-2 font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+            Get the App
+          </a>
           <Link to="/contact-us" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Contact Us</Link>
           <div className="h-[1px] bg-white/10 w-full my-2" />
           <div className="flex items-center gap-6 pt-2">
