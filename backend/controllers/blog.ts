@@ -49,7 +49,7 @@ export const getABlogHandler = async (req: Request, res: Response) => {
 export const getUsersBlogsHandler = async (req: Request, res: Response) => {
     const { userId } = req.params;
     try {
-        const blogs = await Blog.find({ user: userId });    // for reference see the json of blog once
+        const blogs = await Blog.find({ user: userId }).populate("user", "name email");    // for reference see the json of blog once
         return res.status(200).json(blogs);
     } catch(error) {
         console.log(`${error}`);

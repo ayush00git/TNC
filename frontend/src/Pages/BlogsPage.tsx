@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowUpRight, Search, X, PenTool } from 'lucide-react';
+import { ArrowUpRight, Search, X, PenTool, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/NavBar';
 import Footer from '../components/Footer';
@@ -116,20 +116,31 @@ const BlogPage = () => {
                                     />
                                     <Search size={20} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#30363d] group-focus-within:text-white transition-colors" />
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        const authUser = localStorage.getItem("authUser");
-                                        if (!authUser) {
-                                            setShowAuthModal(true);
-                                            return;
-                                        }
-                                        navigate('/write-blog');
-                                    }}
-                                    className="flex items-center justify-center cursor-pointer gap-2 px-6 py-3 bg-[#161b22] border border-[#30363d] text-white hover:bg-[#30363d] transition-colors rounded font-mono uppercase text-sm tracking-wider"
-                                >
-                                    <PenTool size={16} />
-                                    <span>Write Blog</span>
-                                </button>
+                                <div className="flex gap-3">
+                                    {localStorage.getItem("authUser") && (
+                                        <button
+                                            onClick={() => navigate('/my-blogs')}
+                                            className="flex items-center justify-center cursor-pointer gap-2 px-6 py-3 bg-transparent border border-[#30363d] text-white hover:bg-[#161b22] transition-colors rounded font-mono uppercase text-sm tracking-wider"
+                                        >
+                                            <User size={16} />
+                                            <span>My Blogs</span>
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => {
+                                            const authUser = localStorage.getItem("authUser");
+                                            if (!authUser) {
+                                                setShowAuthModal(true);
+                                                return;
+                                            }
+                                            navigate('/write-blog');
+                                        }}
+                                        className="flex items-center justify-center cursor-pointer gap-2 px-6 py-3 bg-[#161b22] border border-[#30363d] text-white hover:bg-[#30363d] transition-colors rounded font-mono uppercase text-sm tracking-wider"
+                                    >
+                                        <PenTool size={16} />
+                                        <span>Write Blog</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
