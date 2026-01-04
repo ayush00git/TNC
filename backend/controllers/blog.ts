@@ -68,3 +68,33 @@ export const getUsersBlogsHandler = async (req: Request, res: Response) => {
     }
 };
 
+export const editBlogHandler = async (req: Request, res: Response) => {
+    const { blogId } = req.params;
+    if( !blogId ) {
+        return res.status(400).json({ message: "Please specify the blog you're trying to edit" });
+    }
+    try {
+        const { title, excerpt, tags, content } = req.body;
+        if( !title || !excerpt || !tags || !content ) {
+            return res.status(400).json({ messages: "Fields can't be kept empty" });
+        }
+    
+        const reqBlog = await Blog.findOneAndUpdate( { _id: blogId }, { 
+            title,
+            excerpt,
+            tags,
+            content,
+        } );
+
+        if( !reqBlog ) {
+            return res.status(400).json({ message: "This blog no longer exists" });
+        }
+
+        return res.status(200).json({ message: "Blog edited successfully", blog: reqBlog });
+    }catch(error) {
+        console.log(`${error}`);
+        throw new Error(`While editing the blog`);
+    }
+};
+
+
