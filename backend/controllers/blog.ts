@@ -37,8 +37,15 @@ export const postBlogHandler = async (req: Request, res: Response) => {
 
 export const getABlogHandler = async (req: Request, res: Response) => {
     const { blogId } = req.params;
+	if( !blogId ) {
+		return res.status(400).json({ message: "Invalid request" });
+	}
+
     try {
         const blog = await Blog.findOne({ _id: blogId }).populate("user", "name email");
+        if( !blog ) {
+            return res.status(200).json({ message: "This blog no longer exists" });
+        }
         return res.status(200).json(blog);
     }catch(error) {
         console.log(`${error}`);
@@ -48,6 +55,10 @@ export const getABlogHandler = async (req: Request, res: Response) => {
 
 export const getUsersBlogsHandler = async (req: Request, res: Response) => {
     const { userId } = req.params;
+    if( !userId ) {
+        return res.status(400).json({ message: "Invalid request" });
+    }
+
     try {
         const blogs = await Blog.find({ user: userId }).populate("user", "name email");    // for reference see the json of blog once
         return res.status(200).json(blogs);
