@@ -38,7 +38,7 @@ export const postBlogHandler = async (req: Request, res: Response) => {
 export const getABlogHandler = async (req: Request, res: Response) => {
     const { blogId } = req.params;
     try {
-        const blog = await Blog.find({ _id: blogId }).populate("user", "name email");
+        const blog = await Blog.findOne({ _id: blogId }).populate("user", "name email");
         return res.status(200).json(blog);
     }catch(error) {
         console.log(`${error}`);

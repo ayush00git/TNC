@@ -30,6 +30,7 @@ body {
     opacity: 0;
     transform: translateY(6px) scale(0.96);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -52,6 +53,7 @@ body {
     opacity: 0;
     transform: translateY(4px) scale(0.99);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -60,4 +62,49 @@ body {
 
 .message-bubble {
   animation: message-appear 0.18s ease-out;
+}
+
+/* Simple GitHub-style Code Styling */
+.prose :where(code):not(:where([class~="not-prose"] *)) {
+  background-color: rgba(110, 118, 129, 0.1);
+  color: #e6edf3;
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.85em;
+}
+
+.prose :where(code):not(:where([class~="not-prose"] *))::before,
+.prose :where(code):not(:where([class~="not-prose"] *))::after {
+  content: none;
+}
+
+.prose :where(pre):not(:where([class~="not-prose"] *)) {
+  background-color: #161b22;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  position: relative;
+  margin: 16px 0;
+}
+
+.prose :where(pre code):not(:where([class~="not-prose"] *)) {
+  background-color: transparent;
+  padding: 0;
+  color: #e6edf3;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
 }

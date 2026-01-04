@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { useGlobalNotifications } from "./hooks/useGlobalNotifications";
 import BlogsPage from "./Pages/BlogsPage";
 import WriteBlog from "./Pages/WriteBlog";
+import ReadBlog from "./Pages/ReadBlog";
 
 function App() {
   const [currentUser, setCurrentUser] = useState<{ _id: string } | null>(null);
@@ -42,6 +43,7 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/blogs" element={<BlogsPage />} />
+        <Route path="/blogs/:blogId" element={<ReadBlog />} />
         <Route path="/write-blog" element={<WriteBlog />} />
       </Routes>
     </>

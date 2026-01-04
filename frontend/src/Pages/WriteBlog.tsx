@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, X, Save, AlertCircle } from 'lucide-react';
+import { ArrowLeft, X, Save, AlertCircle, Maximize2, Minimize2 } from 'lucide-react';
 import Navbar from '../components/NavBar';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import remarkBreaks from 'remark-breaks';
 
 const WriteBlog = () => {
     const navigate = useNavigate();
@@ -15,6 +16,15 @@ const WriteBlog = () => {
     const [viewMode, setViewMode] = useState<'write' | 'preview'>('write');
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    // Handle body overflow when fullscreen
+    useEffect(() => {
+        document.body.style.overflow = isFullscreen ? 'hidden' : 'unset';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isFullscreen]);
 
     const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -116,7 +126,7 @@ const WriteBlog = () => {
                             value={excerpt}
                             onChange={(e) => setExcerpt(e.target.value)}
                             placeholder="Briefly describe this log entry..."
-                            className="w-full bg-transparent text-[#c9d1d9] text-xl md:text-2xl font-light p-4 h-32 resize-none focus:outline-none placeholder:text-[#30363d] leading-relaxed border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1"
+                            className="w-full bg-transparent text-[#c9d1d9] text-xl md:text-2xl font-light p-4 h-32 resize-none focus:outline-none placeholder:text-[#30363d] leading-relaxed border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1 scrollbar-hide"
                         />
                     </div>
 
@@ -176,28 +186,43 @@ const WriteBlog = () => {
                             </div>
                         </div>
 
-                        {viewMode === 'write' ? (
-                            <textarea
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                placeholder="Begin log entry... (Markdown & HTML supported)"
-                                className="w-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-4 h-[600px] resize-y focus:outline-none placeholder:text-[#30363d] border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1"
-                            />
-                        ) : (
-                            <div className="w-full bg-[#0d1117]/50 p-8 h-[600px] overflow-y-auto border-l-2 border-[#30363d] ml-1">
-                                {content ? (
-                                    <div className="prose prose-invert prose-lg max-w-none">
-                                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>
-                                            {content}
-                                        </ReactMarkdown>
-                                    </div>
-                                ) : (
-                                    <div className="h-full flex items-center justify-center text-[#30363d] font-mono text-sm uppercase tracking-widest">
-                                        No Data To Render
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                        <div className="relative">
+                            {viewMode === 'write' ? (
+                                <textarea
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    placeholder="Begin log entry... (Markdown & HTML supported)"
+                                    className="w-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-4 h-[600px] resize-y focus:outline-none placeholder:text-[#30363d] border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1 scrollbar-hide"
+                                />
+                            ) : (
+                                <div className="w-full bg-[#0d1117]/50 p-8 h-[600px] overflow-y-auto border-l-2 border-[#30363d] ml-1">
+                                    {content ? (
+                                        <div className="prose prose-invert prose-lg max-w-none">
+                                            <ReactMarkdown
+                                                rehypePlugins={[rehypeRaw]}
+                                                remarkPlugins={[remarkBreaks]}
+                                            >
+                                                {content}
+                                            </ReactMarkdown>
+                                        </div>
+                                    ) : (
+                                        <div className="h-full flex items-center justify-center text-[#30363d] font-mono text-sm uppercase tracking-widest">
+                                            No Data To Render
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Fullscreen Toggle Button */}
+                            <button
+                                type="button"
+                                onClick={() => setIsFullscreen(true)}
+                                className="absolute bottom-3 right-3 p-2 bg-[#161b22] border border-[#30363d] hover:border-[#00ff00] hover:text-[#00ff00] text-[#8b949e] rounded transition-colors"
+                                aria-label="Maximize editor"
+                            >
+                                <Maximize2 size={16} />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Submit */}
@@ -216,6 +241,70 @@ const WriteBlog = () => {
                     </div>
                 </form>
             </div>
+
+            {/* Fullscreen Content Editor */}
+            {isFullscreen && (
+                <div className="fixed inset-0 z-50 bg-[#060010] flex flex-col animate-in fade-in duration-300">
+                    <div className="flex-1 flex flex-col p-8">
+                        {/* Header with Write/Preview toggles */}
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#30363d]">
+                            <div className="flex gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('write')}
+                                    className={`text-sm font-mono uppercase tracking-widest transition-colors ${viewMode === 'write' ? 'text-[#00ff00] underline underline-offset-4' : 'text-[#30363d] hover:text-[#8b949e]'}`}
+                                >
+                                    [ Write ]
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('preview')}
+                                    className={`text-sm font-mono uppercase tracking-widest transition-colors ${viewMode === 'preview' ? 'text-[#00ff00] underline underline-offset-4' : 'text-[#30363d] hover:text-[#8b949e]'}`}
+                                >
+                                    [ Preview ]
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setIsFullscreen(false)}
+                                className="p-2 hover:bg-[#161b22] rounded transition-colors text-[#8b949e] hover:text-white"
+                                aria-label="Exit fullscreen"
+                            >
+                                <Minimize2 size={20} />
+                            </button>
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="flex-1 overflow-hidden">
+                            {viewMode === 'write' ? (
+                                <textarea
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    placeholder="Begin log entry... (Markdown & HTML supported)"
+                                    className="w-full h-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-6 resize-none focus:outline-none placeholder:text-[#30363d] scrollbar-hide"
+                                    autoFocus
+                                />
+                            ) : (
+                                <div className="w-full h-full overflow-y-auto p-6 scrollbar-hide">
+                                    {content ? (
+                                        <div className="prose prose-invert prose-lg max-w-none">
+                                            <ReactMarkdown
+                                                rehypePlugins={[rehypeRaw]}
+                                                remarkPlugins={[remarkBreaks]}
+                                            >
+                                                {content}
+                                            </ReactMarkdown>
+                                        </div>
+                                    ) : (
+                                        <div className="h-full flex items-center justify-center text-[#30363d] font-mono text-sm uppercase tracking-widest">
+                                            No Data To Render
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
