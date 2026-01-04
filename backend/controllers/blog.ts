@@ -34,3 +34,26 @@ export const postBlogHandler = async (req: Request, res: Response) => {
 		throw new Error(`While posting the blog`);
 	};
 };
+
+export const getABlogHandler = async (req: Request, res: Response) => {
+    const { blogId } = req.params;
+    try {
+        const blog = await Blog.find({ _id: blogId }).populate("user", "name email");
+        return res.status(200).json(blog);
+    }catch(error) {
+        console.log(`${error}`);
+        throw new Error(`While fetching this requested blog`);
+    }
+};
+
+export const getUsersBlogsHandler = async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    try {
+        const blogs = await Blog.find({ user: userId });    // for reference see the json of blog once
+        return res.status(200).json(blogs);
+    } catch(error) {
+        console.log(`${error}`);
+        throw new Error(`While fetching user's own blogs`);
+    }
+};
+
