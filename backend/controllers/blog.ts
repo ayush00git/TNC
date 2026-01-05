@@ -3,7 +3,7 @@ import Blog from "../models/blog";
 
 export const getBlogsHandler = async (req: Request, res: Response) => {
 	try {
-		const blogs = await Blog.find({}).populate("user", "name email");
+		const blogs = await Blog.find({ isDraft: false }).populate("user", "name email");
 		return res.status(200).json({ message: "Blogs fetched successfully", blogs });
 	} catch (error) {
 		console.log(`${error}`);
@@ -12,7 +12,7 @@ export const getBlogsHandler = async (req: Request, res: Response) => {
 };
 
 export const postBlogHandler = async (req: Request, res: Response) => {
-	const { title, excerpt, tags, content } = req.body;
+	const { title, excerpt, tags, content, isDraft } = req.body;
 	const userId = req.user;
 
 	if (!title || !excerpt || !content) {
@@ -26,6 +26,7 @@ export const postBlogHandler = async (req: Request, res: Response) => {
 			excerpt,
 			tags,
 			content,
+            isDraft,
 		});
 		await blog.save();
 		return res.status(200).json({ message: "Blog uploaded success", blog });
@@ -74,7 +75,7 @@ export const editBlogHandler = async (req: Request, res: Response) => {
         return res.status(400).json({ message: "Please specify the blog you're trying to edit" });
     }
     try {
-        const { title, excerpt, tags, content } = req.body;
+        const { title, excerpt, tags, content, isDraft } = req.body;
         if( !title || !excerpt || !tags || !content ) {
             return res.status(400).json({ messages: "Fields can't be kept empty" });
         }
@@ -89,6 +90,7 @@ export const editBlogHandler = async (req: Request, res: Response) => {
             excerpt,
             tags,
             content,
+            isDraft,
         } );
         return res.status(200).json({ message: "Blog edited successfully", blog: editBlog });
     }catch(error) {
