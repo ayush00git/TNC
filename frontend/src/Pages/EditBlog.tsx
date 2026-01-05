@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, X, Save, AlertCircle, Maximize2, Minimize2 } from 'lucide-react';
 import Navbar from '../components/NavBar';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
 
-const WriteBlog = () => {
+const EditBlog = () => {
     const navigate = useNavigate();
+    const { blogId } = useParams<{ blogId: string }>();
     const [title, setTitle] = useState('');
     const [excerpt, setExcerpt] = useState('');
     const [content, setContent] = useState('');
@@ -17,6 +18,38 @@ const WriteBlog = () => {
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch existing blog data
+    useEffect(() => {
+        const fetchBlog = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch(`/api/blog/${blogId}`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch blog');
+                }
+
+                const data = await response.json();
+
+                // Pre-populate form fields
+                setTitle(data.title || '');
+                setExcerpt(data.excerpt || '');
+                setContent(data.content || '');
+                setTags(data.tags || []);
+            } catch (err: any) {
+                setError(err.message || 'Failed to load blog');
+                console.error('Error fetching blog:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (blogId) {
+            fetchBlog();
+        }
+    }, [blogId]);
 
     // Handle body overflow when fullscreen
     useEffect(() => {
@@ -54,8 +87,8 @@ const WriteBlog = () => {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch('/api/blog', {
-                method: 'POST',
+            const response = await fetch(`/api/blog/edit/${blogId}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -70,10 +103,10 @@ const WriteBlog = () => {
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.message || 'Failed to publish blog');
+                throw new Error(data.message || 'Failed to update blog');
             }
 
-            navigate('/blogs');
+            navigate(`/blogs/${blogId}`);
         } catch (err: any) {
             setError(err.message || 'Something went wrong');
         } finally {
@@ -92,8 +125,8 @@ const WriteBlog = () => {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch('/api/blog', {
-                method: 'POST',
+            const response = await fetch(`/api/blog/edit/${blogId}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -119,6 +152,20 @@ const WriteBlog = () => {
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-sans">
+                <Navbar />
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="text-center">
+                        <div className="w-16 h-16 border-4 border-[#30363d] border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="text-[#8b949e] font-mono text-sm uppercase tracking-wider">Loading blog...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-sans selection:bg-white selection:text-black">
             <Navbar />
@@ -126,15 +173,15 @@ const WriteBlog = () => {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-24 border-b border-[#30363d] pb-8">
                     <button
-                        onClick={() => navigate('/blogs')}
+                        onClick={() => navigate('/my-blogs')}
                         className="flex items-center gap-2 text-[#8b949e] hover:text-white transition-colors group"
                     >
                         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                         <span className="font-mono uppercase text-sm tracking-wider">Abort & Return</span>
                     </button>
                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-[#ff0080] rounded-full"></div>
-                        <span className="font-mono text-xs text-[#ff0080] uppercase tracking-widest">Write Mode</span>
+                        <div className="w-2 h-2 bg-[#00ffff] rounded-full"></div>
+                        <span className="font-mono text-xs text-[#00ffff] uppercase tracking-widest">Edit Mode</span>
                     </div>
                 </div>
 
@@ -154,13 +201,13 @@ const WriteBlog = () => {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="ENTRY TITLE_01"
-                            className="w-full bg-transparent border-b border-[#30363d] text-white text-5xl md:text-7xl font-black uppercase tracking-tight py-4 focus:outline-none focus:border-[#ff0080] transition-colors placeholder:text-[#30363d]"
+                            className="w-full bg-transparent border-b border-[#30363d] text-white text-5xl md:text-7xl font-black uppercase tracking-tight py-4 focus:outline-none focus:border-[#00ffff] transition-colors placeholder:text-[#30363d]"
                         />
                     </div>
 
                     {/* Excerpt */}
                     <div className="space-y-4">
-                        <label className="text-xs font-mono text-[#8b949e] uppercase tracking-widest block pl-4 border-l-2 border-[#ff0080]">Abstract / Description</label>
+                        <label className="text-xs font-mono text-[#8b949e] uppercase tracking-widest block pl-4 border-l-2 border-[#00ffff]">Abstract / Description</label>
                         <textarea
                             value={excerpt}
                             onChange={(e) => setExcerpt(e.target.value)}
@@ -281,12 +328,12 @@ const WriteBlog = () => {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className={`group relative cursor-pointer px-8 py-4 bg-transparent border border-[#30363d] text-white font-mono uppercase tracking-widest text-sm hover:border-[#00ff00] hover:text-[#00ff00] transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                            className={`group relative cursor-pointer px-8 py-4 bg-transparent border border-[#30363d] text-white font-mono uppercase tracking-widest text-sm hover:border-[#00ffff] hover:text-[#00ffff] transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            <span className="absolute inset-0 bg-[#00ff00]/5 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                            <span className="absolute inset-0 bg-[#00ffff]/5 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
                             <span className="relative flex items-center gap-3">
                                 <Save size={16} />
-                                {isSubmitting ? 'UPLOADING...' : 'COMMIT ENTRY'}
+                                {isSubmitting ? 'PUBLISHING...' : 'PUBLISH ENTRY'}
                             </span>
                         </button>
                     </div>
@@ -360,4 +407,4 @@ const WriteBlog = () => {
     );
 };
 
-export default WriteBlog;
+export default EditBlog;

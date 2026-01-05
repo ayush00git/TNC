@@ -7,6 +7,7 @@ export interface IBlog {
 	excerpt: string,
 	tags: string[],
 	content: string,
+    isDraft: boolean,
 }
 
 const blogSchema: Schema = new Schema({
@@ -29,6 +30,10 @@ const blogSchema: Schema = new Schema({
 		type: String,
 		required: true,
 	},
+    isDraft: {
+		type: Boolean,
+        default: false,
+    },
 }, { timestamps: true } );
 
 export default model<IBlog>("Blog", blogSchema);
