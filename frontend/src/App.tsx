@@ -13,6 +13,7 @@ import BlogsPage from "./Pages/BlogsPage";
 import WriteBlog from "./Pages/WriteBlog";
 import ReadBlog from "./Pages/ReadBlog";
 import MyBlogsPage from "./Pages/MyBlogsPage";
+import EditBlog from "./Pages/EditBlog";
 
 function App() {
   const [currentUser, setCurrentUser] = useState<{ _id: string } | null>(null);
@@ -47,6 +48,7 @@ function App() {
         <Route path="/blogs/:blogId" element={<ReadBlog />} />
         <Route path="/my-blogs" element={<MyBlogsPage />} />
         <Route path="/write-blog" element={<WriteBlog />} />
+        <Route path="/edit-blog/:blogId" element={<EditBlog />} />
       </Routes>
     </>
   );

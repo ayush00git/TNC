@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowUpRight, Search, ArrowLeft, PenTool } from 'lucide-react';
+import { ArrowUpRight, Search, ArrowLeft, PenTool, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/NavBar';
 import Footer from '../components/Footer';
@@ -14,6 +14,7 @@ interface BlogPost {
     readTime: string;
     createdAt: string;
     color?: string;
+    isDraft?: boolean;
     user?: {
         name: string;
         email: string;
@@ -26,6 +27,7 @@ const MyBlogsPage = () => {
     const [posts, setPosts] = useState<BlogPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     const formatDate = (isoString: string) => {
         if (!isoString) return '';
@@ -93,6 +95,39 @@ const MyBlogsPage = () => {
             post.tags.some(tag => tag.toLowerCase().includes(query))
         );
     });
+
+    const handleDeleteClick = (e: React.MouseEvent, blogId: string) => {
+        e.stopPropagation();
+        setDeleteConfirmId(blogId);
+    };
+
+    const handleDeleteConfirm = async (blogId: string) => {
+        try {
+            const response = await fetch(`/api/blog/delete/${blogId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                setPosts(posts.filter(post => post._id !== blogId));
+                setDeleteConfirmId(null);
+            } else {
+                const error = await response.json();
+                alert(`Failed to delete blog: ${error.message || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error deleting blog:', error);
+            alert('Failed to delete blog');
+        }
+    };
+
+    const handleDeleteCancel = () => {
+        setDeleteConfirmId(null);
+    };
+
+    const handleEdit = (e: React.MouseEvent, blogId: string) => {
+        e.stopPropagation();
+        navigate(`/edit-blog/${blogId}`);
+    };
 
     return (
         <>
@@ -178,13 +213,68 @@ const MyBlogsPage = () => {
                                 {filteredPosts.map((post, index) => (
                                     <div
                                         key={post._id || post.id || index}
-                                        className="group relative border-t border-[#30363d] py-16 md:py-24 cursor-pointer transition-colors duration-500 hover:bg-[#161b22]/30"
-                                        onClick={() => navigate(`/blogs/${post._id}`)}
+                                        className="group relative border-t border-[#30363d] py-16 md:py-24 transition-colors duration-500 hover:bg-[#161b22]/30"
                                     >
                                         {/* Left Accent Bar on Hover */}
                                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-current transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-top" style={{ color: post.color }} />
 
-                                        <div className="flex flex-col md:flex-row gap-8 md:gap-20 items-start pl-6">
+                                        {/* Draft Label */}
+                                        {post.isDraft && (
+                                            <div className="absolute top-4 left-4 z-10">
+                                                <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500 text-yellow-500 font-mono text-xs uppercase tracking-widest rounded">
+                                                    Draft
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Edit and Delete Buttons */}
+                                        <div className="absolute top-4 right-4 flex gap-2 z-10">
+                                            <button
+                                                onClick={(e) => handleEdit(e, post._id)}
+                                                className="p-2 bg-[#161b22] border border-[#30363d] text-[#8b949e] hover:text-white hover:border-white transition-colors rounded cursor-pointer"
+                                                title="Edit blog"
+                                            >
+                                                <Edit size={18} />
+                                            </button>
+                                            <div className="relative">
+                                                <button
+                                                    onClick={(e) => handleDeleteClick(e, post._id)}
+                                                    className="p-2 bg-[#161b22] border border-[#30363d] text-[#8b949e] hover:text-red-500 hover:border-red-500 transition-colors rounded cursor-pointer"
+                                                    title="Delete blog"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+
+                                                {/* Delete Confirmation Modal */}
+                                                {deleteConfirmId === post._id && (
+                                                    <div
+                                                        className="absolute top-12 right-0 bg-[#161b22] border border-[#30363d] rounded shadow-lg p-4 w-64 z-50"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <p className="text-white font-mono text-sm mb-4">Delete this blog?</p>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => handleDeleteConfirm(post._id)}
+                                                                className="flex-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-mono text-xs uppercase tracking-wider rounded transition-colors"
+                                                            >
+                                                                Yes
+                                                            </button>
+                                                            <button
+                                                                onClick={handleDeleteCancel}
+                                                                className="flex-1 px-3 py-2 bg-[#30363d] hover:bg-[#484f58] text-white font-mono text-xs uppercase tracking-wider rounded transition-colors"
+                                                            >
+                                                                No
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            className="flex flex-col md:flex-row gap-8 md:gap-20 items-start pl-6 cursor-pointer"
+                                            onClick={() => navigate(post.isDraft ? `/edit-blog/${post._id}` : `/blogs/${post._id}`)}
+                                        >
                                             {/* Column 1: Index & Meta */}
                                             <div className="w-full md:w-32 flex flex-row md:flex-col justify-between md:justify-start gap-4 shrink-0">
                                                 <span className="font-mono text-4xl md:text-6xl font-bold text-[#30363d] group-hover:text-white transition-colors duration-300 select-none">
