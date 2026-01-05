@@ -333,7 +333,7 @@ const EditBlog = () => {
                             <span className="absolute inset-0 bg-[#00ffff]/5 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
                             <span className="relative flex items-center gap-3">
                                 <Save size={16} />
-                                {isSubmitting ? 'UPDATING...' : 'UPDATE ENTRY'}
+                                {isSubmitting ? 'PUBLISHING...' : 'PUBLISH ENTRY'}
                             </span>
                         </button>
                     </div>
