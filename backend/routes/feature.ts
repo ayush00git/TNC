@@ -6,3 +6,4 @@ export const featureRoute = express.Router();
 
 featureRoute.get('/', getFeatures);
 featureRoute.post('/', allowOnlyAuthenticatedUser, postFeatures);
+

@@ -10,3 +10,4 @@ blogRoute.put('/edit/:blogId', allowOnlyAuthenticatedUser, editBlogHandler);
 blogRoute.delete('/delete/:blogId', allowOnlyAuthenticatedUser, deleteBlogHandler);
 blogRoute.get('/', getBlogsHandler);
 blogRoute.post('/', allowOnlyAuthenticatedUser, postBlogHandler);
+

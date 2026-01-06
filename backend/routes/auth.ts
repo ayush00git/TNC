@@ -12,3 +12,4 @@ authRoute.post('/forget-password/viaEmail', handlerForgetPassViaEmail)
 authRoute.post('/reset-password', changeUserPass);
 authRoute.get('/verify-acc', handleVerifyEmail);
 authRoute.post('/save-token', allowOnlyAuthenticatedUser, savePushToken);
+
