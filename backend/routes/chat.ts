@@ -8,3 +8,4 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 chatRoute.post('/:roomId', upload.single("image"), sendChat);
 chatRoute.get('/chat-history/:roomId', getChatHistory);
+
