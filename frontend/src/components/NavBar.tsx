@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Github, Menu, X, Terminal, MessageSquare } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Github, Menu, X, Terminal, MessageSquare, LogOut } from 'lucide-react';
+import LogOutModal from './LogOutModal';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = () => {
@@ -23,6 +27,33 @@ export default function Navbar() {
 
   // Helper to check active state for styling
   const isActive = (path: string) => location.pathname === path;
+
+  // Logout handler
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const res = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        // Clear local storage
+        localStorage.removeItem('authUser');
+        localStorage.removeItem('joinedRooms');
+        setIsAuthenticated(false);
+        setShowLogoutModal(false);
+        // Redirect to home page
+        navigate('/');
+      } else {
+        console.error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#060010]/80 backdrop-blur-md border-b border-white/5">
@@ -115,6 +146,17 @@ export default function Navbar() {
               <div className="absolute -top-1 right-3 w-2 h-2 bg-[#1A1625] border-t border-l border-white/10 rotate-45" />
             </div>
           </div>
+
+          {/* Logout Icon - Only for authenticated users */}
+          {isAuthenticated && (
+            <button
+              onClick={() => setShowLogoutModal(true)}
+              className="flex items-center justify-center w-10 h-10 cursor-pointer rounded-full bg-[#0A0514] border border-white/10 text-red-400 hover:border-red-500/50 hover:bg-red-500/10 transition-all duration-300"
+              title="Logout"
+            >
+              <LogOut size={20} strokeWidth={2} />
+            </button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -154,8 +196,24 @@ export default function Navbar() {
               <Terminal size={20} /> <span className="text-sm">Developer</span>
             </a>
           </div>
+          {isAuthenticated && (
+            <button
+              onClick={() => setShowLogoutModal(true)}
+              className="text-red-400 hover:text-red-300 flex items-center gap-2 py-2"
+            >
+              <LogOut size={20} /> <span className="text-sm">Logout</span>
+            </button>
+          )}
         </div>
       )}
+
+      {/* Logout Confirmation Modal */}
+      <LogOutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        isLoggingOut={isLoggingOut}
+      />
     </nav>
   );
 }
