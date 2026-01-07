@@ -223,3 +223,14 @@ export const changeUserPass = async (req: Request, res: Response) => {
     throw new Error(`While changing password via email`);
   }
 };
+
+export const handleUserLogOut = async(req: Request, res: Response) => {
+    try {
+        res.clearCookie('token');
+        return res.status(200).json({ message: "Logged out successfully" });
+    }catch(error) {
+        console.log(`${error}`);
+        throw new Error(`While clearing the token from cookies`);
+    }
+};
+
