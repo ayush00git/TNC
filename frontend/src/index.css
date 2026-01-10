@@ -1,110 +1,164 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
 
+@plugin "@tailwindcss/typography";
+@theme{
+
+    /**
+    Surface colors, these are used for big containers
+     */
+    --color-surface-lowest: #007bff;
+    --color-surface-low: #007bff;
+    --color-surface-high: #007bff;
+    --color-surface-highest: #007bff;
+    --color-on-surface: #007bff;
+    /**
+     */
+    --color-surface-primary: #000;
+    --color-on-surface-primary: #007bff;
+    --color-surface-secondary: #000;
+    --color-on-surface-secondary: #007bff;
+
+    /**
+    Colors used for buttons, links etc
+     */
+    --color-primary: #5173ff;
+    --color-secondary: #849aff;
+    --color-on-primary: #007bff;
+    --color-on-secondary: #007bff;
+
+}
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 html,
 body,
 #root {
-  margin: 0;
-  padding: 0;
-  height: 100%;
+    margin: 0;
+    padding: 0;
+    height: 100%;
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background-color: #010409;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-color: #010409;
+    max-width: 100vw;
 }
 
 .noise-bg {
-  background-image: url('/noise.png');
-  background-repeat: repeat;
+    background-image: url('/noise.png');
+    background-repeat: repeat;
 }
 
 @keyframes attachment-pop {
-  0% {
-    opacity: 0;
-    transform: translateY(6px) scale(0.96);
-  }
+    0% {
+        opacity: 0;
+        transform: translateY(6px) scale(0.96);
+    }
 
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .attachment-menu {
-  transform-origin: bottom left;
-  animation: attachment-pop 0.16s ease-out;
+    transform-origin: bottom left;
+    animation: attachment-pop 0.16s ease-out;
 }
 
 .attachment-option {
-  opacity: 0;
-  transform: translateY(4px) scale(0.96);
-  animation: attachment-pop 0.16s ease-out forwards;
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+    animation: attachment-pop 0.16s ease-out forwards;
 }
 
 @keyframes message-appear {
-  0% {
-    opacity: 0;
-    transform: translateY(4px) scale(0.99);
-  }
+    0% {
+        opacity: 0;
+        transform: translateY(4px) scale(0.99);
+    }
 
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .message-bubble {
-  animation: message-appear 0.18s ease-out;
+    animation: message-appear 0.18s ease-out;
 }
 
 /* Simple GitHub-style Code Styling */
 .prose :where(code):not(:where([class~="not-prose"] *)) {
-  background-color: rgba(110, 118, 129, 0.1);
-  color: #e6edf3;
-  padding: 0.2em 0.4em;
-  border-radius: 6px;
-  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-  font-size: 0.85em;
+    background-color: rgba(110, 118, 129, 0.1);
+    color: #e6edf3;
+    padding: 0.2em 0.4em;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    font-size: 0.85em;
 }
 
 .prose :where(code):not(:where([class~="not-prose"] *))::before,
 .prose :where(code):not(:where([class~="not-prose"] *))::after {
-  content: none;
+    content: none;
 }
 
 .prose :where(pre):not(:where([class~="not-prose"] *)) {
-  background-color: #161b22;
-  border-radius: 6px;
-  padding: 16px;
-  overflow-x: auto;
-  position: relative;
-  margin: 16px 0;
+    background-color: #161b22;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    position: relative;
+    margin: 16px 0;
 }
 
 .prose :where(pre code):not(:where([class~="not-prose"] *)) {
-  background-color: transparent;
-  padding: 0;
-  color: #e6edf3;
-  font-size: 0.875rem;
-  line-height: 1.45;
+    background-color: transparent;
+    padding: 0;
+    color: #e6edf3;
+    font-size: 0.875rem;
+    line-height: 1.45;
 }
 
 /* Hide scrollbar utility */
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;
-  /* Chrome, Safari and Opera */
+    display: none;
+    /* Chrome, Safari and Opera */
+}
+
+.draw-animation {
+    fill-opacity: 0;
+    stroke: currentColor;
+    stroke-width: 20;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+
+    stroke-dasharray: 3000;
+    stroke-dashoffset: 3000;
+
+    animation: draw 2s ease forwards;
+}
+
+@keyframes draw {
+    0% {
+        stroke-dashoffset: 3000;
+        fill-opacity: 0;
+    }
+    50% {
+        stroke-dashoffset: 0;
+    }
+    100%{
+        stroke-dashoffset: 0;
+        fill-opacity: 1;
+    }
 }

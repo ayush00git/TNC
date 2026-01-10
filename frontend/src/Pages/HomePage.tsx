@@ -10,9 +10,9 @@ export default function HomePage() {
         <>
             <Navbar />
             <HeroSection />
-            <TechStack />
-            <ShowCase />
-            <ProposedFeatures />
+            {/*<TechStack />*/}
+            {/*<ShowCase />*/}
+            {/*<ProposedFeatures />*/}
             <Footer />
         </>
     );
