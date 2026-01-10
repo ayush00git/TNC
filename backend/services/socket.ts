@@ -12,9 +12,16 @@ export const socketSetup = (io: Server) => {
     io.on('connection', (socket: Socket) => {
         console.log(`User connected ${socket.id}`)
 
-        socket.on('join_room', (room: string) => {
+        socket.on('join_room', (data: { room: string; userId?: string }) => {
+            const room = typeof data === 'string' ? data : data.room;
             socket.join(room);
-            console.log(`User ${socket.id} joined ${room}`);
+
+            // Store userId on socket for notification filtering
+            if (typeof data === 'object' && data.userId) {
+                (socket as any).userId = data.userId;
+            }
+
+            console.log(`User ${socket.id} (userId: ${(socket as any).userId || 'unknown'}) joined ${room}`);
         })
 
         socket.on('send_message', async (data: sendMessagePayload) => {

@@ -20,6 +20,7 @@ import CodeModal from "./CodeModal";
 import ImageModal from "./ImageModal";
 import { socket } from "../services/socket";
 import axios from "axios";
+import { useBrowserNotifications } from "../hooks/useBrowserNotifications";
 
 // --- Types ---
 interface User {
@@ -59,6 +60,7 @@ interface RoomDetails {
 interface ChatWindowProps {
   roomId?: string;
   onOpenSidebar?: () => void;
+  setCurrentRoom: (roomId: string | null) => void;
 }
 
 // --- Mock Database (used for fallback) ---
@@ -103,7 +105,7 @@ const MemberModal = ({
 
   const handleInvite = async () => {
     try {
-      await navigator.clipboard.writeText("http://localhost:5173");
+      await navigator.clipboard.writeText(window.location.origin);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -181,7 +183,7 @@ const MemberModal = ({
   );
 };
 
-export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
+export default function ChatWindow({ roomId, onOpenSidebar, setCurrentRoom }: ChatWindowProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [activeRoom, setActiveRoom] = useState<RoomDetails | null>(null);
@@ -203,6 +205,9 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
 
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
+  // Browser notifications
+  const { permission, requestPermission, showNotification } = useBrowserNotifications();
+
   const allMembers = useMemo(() => {
     const members: User[] = activeRoom?.members ? [...activeRoom.members] : [];
     if (currentUser && !members.find((m) => m.id === currentUser.id)) {
@@ -217,6 +222,63 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
   useEffect(() => {
     effectiveUserRef.current = effectiveUser;
   }, [effectiveUser]);
+
+  // Date separator helper functions
+  const getDateLabel = (timestamp: string | Date): string => {
+    const messageDate = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time to midnight for comparison
+    const resetTime = (date: Date) => {
+      date.setHours(0, 0, 0, 0);
+      return date;
+    };
+
+    const messageDateOnly = resetTime(new Date(messageDate));
+    const todayOnly = resetTime(new Date(today));
+    const yesterdayOnly = resetTime(new Date(yesterday));
+
+    if (messageDateOnly.getTime() === todayOnly.getTime()) {
+      return 'Today';
+    } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
+      return 'Yesterday';
+    } else {
+      // Format as "Dec 25, 2024"
+      return messageDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+  };
+
+  const groupMessagesWithDates = (messages: Message[]): any[] => {
+    if (!messages || messages.length === 0) return [];
+
+    const grouped: any[] = [];
+    let lastDate: string | null = null;
+
+    messages.forEach((message) => {
+      const dateLabel = getDateLabel(message.createdAt);
+
+      // Insert date separator if date changed
+      if (dateLabel !== lastDate) {
+        grouped.push({
+          type: 'date-separator',
+          id: `date-${message.createdAt}`,
+          label: dateLabel
+        });
+        lastDate = dateLabel;
+      }
+
+      // Add the actual message
+      grouped.push({ ...message, type: 'message' });
+    });
+
+    return grouped;
+  };
 
   const handleImageSelect = (dataUrl: string) => {
 
@@ -259,6 +321,22 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
       setCurrentUser(MOCK_DB.user);
     }
   }, []);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if (permission === 'default') {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  // Track current room for global notifications
+  useEffect(() => {
+    if (activeRoom?._id) {
+      setCurrentRoom(activeRoom._id);
+    } else {
+      setCurrentRoom(null);
+    }
+  }, [activeRoom, setCurrentRoom]);
 
   // Fetch Room & Messages
   useEffect(() => {
@@ -358,6 +436,16 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
             newMessages[existingIndex] = formattedMsg;
             return newMessages;
           }
+        } else {
+          // Message from another user - show browser notification
+          const senderName = newMessage.sender?.name || "Someone";
+          const messagePreview = newMessage.text || "Sent an image";
+
+          showNotification(`${senderName} in #${activeRoom?.title || 'Chat'}`, {
+            body: messagePreview,
+            tag: activeRoom?._id || 'chat',
+            data: { roomId: activeRoom?._id, roomTitle: activeRoom?.title },
+          });
         }
         return [...prev, formattedMsg];
       });
@@ -629,7 +717,22 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
           </p>
         </div>
 
-        {messages.map((msg, idx) => {
+        {groupMessagesWithDates(messages).map((item, idx) => {
+          // Handle date separator
+          if (item.type === 'date-separator') {
+            return (
+              <div key={item.id} className="flex items-center gap-4 my-6">
+                <div className="flex-1 h-px bg-white/10"></div>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  {item.label}
+                </span>
+                <div className="flex-1 h-px bg-white/10"></div>
+              </div>
+            );
+          }
+
+          // Handle regular message
+          const msg = item;
           // Adjust user lookup for real data structure
           const user = msg.sender || {
             id: "unknown",
@@ -641,7 +744,10 @@ export default function ChatWindow({ roomId, onOpenSidebar }: ChatWindowProps) {
           // IMPORTANT: Check ID types (string vs number)
           const isMe = (user.id === effectiveUser.id || user._id === effectiveUser.id) && user.id !== "unknown";
 
-          const prevMsg = messages[idx - 1];
+          const groupedMessages = groupMessagesWithDates(messages);
+          const prevItem = groupedMessages[idx - 1];
+          const prevMsg = prevItem?.type === 'message' ? prevItem : null;
+
           // Check sender ID consistency
           const prevSenderId = prevMsg?.sender?.id || prevMsg?.sender?._id || prevMsg?.userId;
           const currentSenderId = user.id || user._id;

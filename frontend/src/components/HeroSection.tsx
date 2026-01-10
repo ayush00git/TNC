@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MessageSquare, Shield, Zap, LogIn } from 'lucide-react';
+import { ArrowRight, MessageSquare, Shield, Zap, Download } from 'lucide-react';
 
 export default function HeroSection() {
     const navigate = useNavigate();
@@ -24,13 +24,13 @@ export default function HeroSection() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                         </span>
-                        v1.0 Now Live - Join the Community
+                        v1.4.5 Now Live - Join the Community
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                        The Network for <br />
+                        The Nerds <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
-                            Creative Developers
+                            Community
                         </span>
                     </h1>
 
@@ -48,9 +48,11 @@ export default function HeroSection() {
                             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                         </button>
 
-                        {/* Redesigned Log In Button */}
-                        <button
-                            onClick={() => navigate('/login')}
+                        {/* Get the App Button */}
+                        <a
+                            href="https://github.com/ayush00git/TNC/releases/download/v1.0.0/tnc-mobile-v1.0.0.apk"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="
                 w-full sm:w-auto px-8 py-4 rounded-full 
                 bg-[#060010] 
@@ -63,9 +65,9 @@ export default function HeroSection() {
                 hover:-translate-y-0.5
               "
                         >
-                            Log In
-                            <LogIn size={18} />
-                        </button>
+                            Get the App
+                            <Download size={18} />
+                        </a>
                     </div>
                 </section>
 

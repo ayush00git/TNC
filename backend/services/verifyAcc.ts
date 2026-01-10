@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { generateToken } from "./authToken";
 
 dotenv.config();
-
+const FRONTEND_URL = process.env.FRONTEND_PROD_URL;
 export const verifyAcc = async (user: any) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -112,7 +112,7 @@ export const verifyAcc = async (user: any) => {
                         <p>Welcome to <strong>TNC</strong>! We're excited to have you on board. To get started, please confirm your email address.</p>
                         
                         <div class="btn-wrapper">
-                            <a href="http://tnc.ayushz.me/verify-email?hash=${randomHash}" class="btn">Verify Email Address</a>
+                            <a href="${FRONTEND_URL}/verify-email?hash=${randomHash}" class="btn">Verify Email Address</a>
                         </div>
                         
                         <p style="font-size: 14px; color: #64748b;">

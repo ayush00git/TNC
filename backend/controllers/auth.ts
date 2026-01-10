@@ -19,7 +19,7 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
 
     const existingUser = await Auth.findOne({ email });
     if(existingUser) {
-      return res.status(400).json({ message: "You already have an account, login instead OR if you want to verify your email then check your email inbox or contact us" });
+      return res.status(400).json({ message: "You already have an account, login instead OR if you want to verify your email then check your email inbox" });
     }
 
     const salt = generateSalt();
@@ -35,7 +35,7 @@ export const handleUserSignUp = async (req: Request, res: Response) => {
     await newUser.save();
     verifyAcc(newUser);
 
-    return res.status(200).json({ message: "Email has been sent for account verification Check your inbox" });
+    return res.status(200).json({ message: "Check your inbox for account verification email" });
   } catch (error) {
     console.log(`While signing up`);
     throw new Error(`While creating a new User`);
@@ -59,7 +59,17 @@ export const handleVerifyEmail = async (req: Request, res: Response) => {
 
     user.isVerified = true;
     await user.save();
-    return res.status(200).json({ message: "Email is verified, now you can login to your account" });
+
+    // letting user login immediately after account verification, no need to login after signup and verification is completed
+    const token = generateToken(user);
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({ message: "Email verified successfully", token, user });
   } catch (error) {
     console.log(`${error}`);
     throw new Error(`While verifying the email`);
@@ -94,11 +104,12 @@ export const handleUserLogIn = async (req: Request, res: Response) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
       message: "Logged in success",
+      token,
       user: {
         _id: existingUser._id,
         name: existingUser.name,
@@ -170,7 +181,7 @@ export const handlerForgetPassViaEmail = async (
         .status(400)
         .json({ message: "Email couldn't be sent at the moment" });
     }
-    return res.status(200).json({ message: "Email sent successfully" });
+    return res.status(200).json({ message: `Reset link sent to your email` });
   } catch (error) {
     console.log(`${error}`);
     throw new Error(`While user tried to change pass via email`);
@@ -212,3 +223,14 @@ export const changeUserPass = async (req: Request, res: Response) => {
     throw new Error(`While changing password via email`);
   }
 };
+
+export const handleUserLogOut = async(req: Request, res: Response) => {
+    try {
+        res.clearCookie('token');
+        return res.status(200).json({ message: "Logged out successfully" });
+    }catch(error) {
+        console.log(`${error}`);
+        throw new Error(`While clearing the token from cookies`);
+    }
+};
+
