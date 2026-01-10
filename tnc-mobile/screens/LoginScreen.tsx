@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import client from '../services/client'; // Import the client
 import { useToast } from '../context/ToastContext';
+import { syncPushToken } from '../services/notification';
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
@@ -33,7 +34,11 @@ export default function LoginScreen({ navigation }: any) {
 
       showToast(response.data.message, 'success');
       // Replace current screen with Room to prevent going back to login
+      // Replace current screen with Room to prevent going back to login
       navigation.replace('Room');
+
+      // Sync push token
+      syncPushToken();
     } catch (error: any) {
       console.error('Login error:', error);
       const message = error.response?.data?.message || error.message || 'Invalid credentials';

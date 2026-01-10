@@ -22,13 +22,20 @@ export default function VerifyEmail() {
             try {
                 const res = await fetch(`/api/auth/verify-acc?hash=${hash}`, {
                     method: "GET",
+                    credentials: "include",
                 });
 
                 const data = await res.json();
 
                 if (res.ok) {
                     setStatus("success");
-                    setMessage("Email verified successfully! You can now log in.");
+                    setMessage("Email verified successfully! Redirecting...");
+
+                    if (data.token) {
+                        setTimeout(() => {
+                            navigate("/join-room");
+                        }, 1500);
+                    }
                 } else {
                     setStatus("error");
                     setMessage(data.message || "Verification failed.");
@@ -40,24 +47,23 @@ export default function VerifyEmail() {
         };
 
         // Adding a small delay to prevent flickering if api is too fast
-        setTimeout(verify, 1500); 
-    }, [searchParams]);
+        setTimeout(verify, 1500);
+    }, [searchParams, navigate]);
 
     return (
         <div className="min-h-screen bg-[#060010] text-slate-200 font-sans flex flex-col items-center justify-center p-6 relative overflow-hidden">
             <Navbar />
             <div className="w-full max-w-md relative z-10">
-                
+
                 {/* Main Card - Removed Gradients/Glows */}
                 <div className="bg-[#0A0514] border border-white/10 rounded-3xl p-8 text-center shadow-2xl relative">
-                    
+
                     {/* Status Icon Area - Clean */}
                     <div className="flex justify-center mb-8">
-                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center border border-white/5 shadow-inner transition-colors duration-500 ${
-                             status === 'loading' ? 'bg-[#1A1625]' : 
-                             status === 'success' ? 'bg-emerald-500/10 border-emerald-500/20' : 
-                             'bg-red-500/10 border-red-500/20'
-                        }`}>
+                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center border border-white/5 shadow-inner transition-colors duration-500 ${status === 'loading' ? 'bg-[#1A1625]' :
+                                status === 'success' ? 'bg-emerald-500/10 border-emerald-500/20' :
+                                    'bg-red-500/10 border-red-500/20'
+                            }`}>
                             {status === "loading" && (
                                 <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" strokeWidth={1.5} />
                             )}
@@ -91,23 +97,23 @@ export default function VerifyEmail() {
                                 text-sm font-medium tracking-wider
                                 flex items-center justify-center gap-2
                                 transition-all duration-300 ease-out
-                                ${isHovered 
-                                ? 'border-indigo-500/50 text-indigo-100 translate-y-[-2px] shadow-lg shadow-indigo-500/10' 
-                                : 'border-white/10 text-slate-500 hover:text-slate-300'}
+                                ${isHovered
+                                    ? 'border-indigo-500/50 text-indigo-100 translate-y-[-2px] shadow-lg shadow-indigo-500/10'
+                                    : 'border-white/10 text-slate-500 hover:text-slate-300'}
                             `}
                         >
                             <span>Go to Login</span>
-                            <ArrowRight 
-                                className={`w-4 h-4 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`} 
+                            <ArrowRight
+                                className={`w-4 h-4 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}
                             />
                         </button>
                     )}
                 </div>
-                
+
                 {/* Footer Brand */}
                 <div className="mt-8 text-center opacity-40 hover:opacity-100 transition-opacity duration-300">
-                     <ShieldCheck className="w-5 h-5 mx-auto text-slate-500 mb-2" strokeWidth={1.5} />
-                     <p className="text-xs text-slate-600 font-medium tracking-widest uppercase">Secure Verification</p>
+                    <ShieldCheck className="w-5 h-5 mx-auto text-slate-500 mb-2" strokeWidth={1.5} />
+                    <p className="text-xs text-slate-600 font-medium tracking-widest uppercase">Secure Verification</p>
                 </div>
 
             </div>
