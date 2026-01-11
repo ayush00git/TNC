@@ -18,7 +18,7 @@ export default function Navbar() {
     };
 
     checkAuth();
-    // Listen for storage events in case it changes in another tab, 
+    // Listen for storage events in case it changes in another tab,
     // though for single tab navigation, re-renders or window-events are needed.
     // For now, simple check on mount is standard for this codebase style.
     window.addEventListener('storage', checkAuth);

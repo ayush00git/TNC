@@ -7,7 +7,7 @@ import ForgotPassword from "./Pages/ForgotPassword";
 import VerifyEmail from "./Pages/VerifyEmail";
 import ResetPassword from "./Pages/ResetPassword";
 import HomePage from "./Pages/HomePage";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useGlobalNotifications } from "./hooks/useGlobalNotifications";
 import BlogsPage from "./Pages/BlogsPage";
 import WriteBlog from "./Pages/WriteBlog";
@@ -16,21 +16,20 @@ import MyBlogsPage from "./Pages/MyBlogsPage";
 import EditBlog from "./Pages/EditBlog";
 
 function App() {
-  const [currentUser, setCurrentUser] = useState<{ _id: string } | null>(null);
-  const { setCurrentRoom } = useGlobalNotifications(currentUser?._id || null);
-
-  // Load current user from localStorage
-  useEffect(() => {
+  const [currentUser ] = useState<{ _id: string } | null>(() => {
     try {
       const raw = localStorage.getItem("authUser");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setCurrentUser({ _id: parsed._id });
-      }
-    } catch (error) {
-      console.error("Failed to load user:", error);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      return { _id: parsed._id };
+    } catch {
+      return null;
     }
-  }, []);
+  });
+
+  const { setCurrentRoom } = useGlobalNotifications(currentUser?._id ?? null);
+
 
   return (
     <>

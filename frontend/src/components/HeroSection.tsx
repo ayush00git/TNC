@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, MessageSquare, Shield, Zap, Download } from "lucide-react";
-import TNCLogo from "./TNCLogo.tsx";
+import TNCLogo from "./TNCLogo";
+import BlogBackground from "./BlogBackground";
 
 export default function HeroSection() {
     const navigate = useNavigate();
@@ -18,31 +19,23 @@ export default function HeroSection() {
         <div className="min-h-screen w-full flex flex-col">
             {/* Hero Section */}
             <section className="flex-1 p-10 w-full flex flex-col justify-center items-center text-center max-w-screen overflow-hidden relative">
-                {/*<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">*/}
-                {/*    /!*<span className="relative flex h-2 w-2">*!/*/}
-                {/*    /!*    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>*!/*/}
-                {/*    /!*    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>*!/*/}
-                {/*    /!*</span>*!/*/}
-                {/*    /!*v1.4.5 Now Live - Join the Community*!/*/}
-                {/*</div>*/}
-                <TNCLogo className="absolute scale-110 max-h-screen text-primary opacity-10 top-0 right-0 h-full w-full -z-10"/>
-                <h1 className="text-5xl md:text-7xl font-bold text-primary tracking-tight mb-6">
+                <BlogBackground className="absolute -z-20 top-0 left-0 "/>
+                <TNCLogo className="absolute blur-xl max-w-svh scale-90 max-h-full text-primary-mute top-0 left-1/2 -translate-x-1/2 h-full w-full -z-10"/>
+                <h1 className="text-5xl md:text-9xl font-bold text-primary tracking-tight mb-6">
                     The Nerds <br/>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
-                            Community
-                        </span>
+                    Community
                 </h1>
 
-                <p className="text-lg md:text-xl text-slate-400 max-w-xl mb-10 leading-relaxed ">
+                <p className="text-lg md:text-xl text-on-surface-primary max-w-xl mb-10 leading-relaxed ">
                     TNC is the premier workspace for engineers, designers, and founders to connect.
-                    Real-time chat, domain-specific rooms, and a <span className="text-indigo-400">community that actually ships.</span>
+                    Real-time chat, domain-specific rooms, and a <span className="text-primary">community that actually ships.</span>
                 </p>
 
                 <div
                     className="flex flex-col sm:flex-row items-center justify-start gap-4 animate-in fade-in slide-community that actually ships.in-from-bottom-8 duration-700 delay-200">
                     <button
                         onClick={handleStartChatting}
-                        className="w-full sm:w-auto px-8 py-4 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold cursor-pointer transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 group"
+                        className="w-full sm:w-auto px-8 py-4 rounded-md bg-primary hover:bg-indigo-500 text-on-primary font-semibold cursor-pointer transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 group"
                     >
                         Get Started
                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform"/>
@@ -55,9 +48,10 @@ export default function HeroSection() {
                         rel="noopener noreferrer"
                         className="
                                 w-full sm:w-auto px-8 py-4 rounded-full
-                                bg-[#060010]
+                                bg-primary-mute
+                                rounded-md
                                 border-2 border-white/10
-                                text-slate-400 font-medium tracking-wide cursor-pointer
+                                text-on-primary-mute font-medium tracking-wide cursor-pointer
                                 flex items-center justify-center gap-2
                                 transition-all duration-300 ease-out
                                 hover:border-indigo-500/50 hover:text-indigo-100
@@ -70,46 +64,6 @@ export default function HeroSection() {
                     </a>
                 </div>
             </section>
-
-            {/* Feature Grid*/}
-            {/*<section className="py-20 px-6 max-w-7xl mx-auto">*/}
-            {/*    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">*/}
-
-            {/*        /!* Feature 1 *!/*/}
-            {/*        <div className="p-8 rounded-3xl bg-[#0A0514] border border-white/5 hover:border-indigo-500/30 transition-colors group">*/}
-            {/*            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">*/}
-            {/*                <MessageSquare className="text-indigo-400" size={24} />*/}
-            {/*            </div>*/}
-            {/*            <h3 className="text-xl font-bold text-white mb-3">Real-time Channels</h3>*/}
-            {/*            <p className="text-slate-400 leading-relaxed">*/}
-            {/*                Instant messaging powered by WebSockets. No lag, just pure conversation flow across 7 distinct domains.*/}
-            {/*            </p>*/}
-            {/*        </div>*/}
-
-            {/*        /!* Feature 2 *!/*/}
-            {/*        <div className="p-8 rounded-3xl bg-[#0A0514] border border-white/5 hover:border-purple-500/30 transition-colors group">*/}
-            {/*            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">*/}
-            {/*                <Shield className="text-purple-400" size={24} />*/}
-            {/*            </div>*/}
-            {/*            <h3 className="text-xl font-bold text-white mb-3">Secure & Private</h3>*/}
-            {/*            <p className="text-slate-400 leading-relaxed">*/}
-            {/*                End-to-end encrypted verification and secure authentication ensuring your discussions remain private.*/}
-            {/*            </p>*/}
-            {/*        </div>*/}
-
-            {/*        /!* Feature 3 *!/*/}
-            {/*        <div className="p-8 rounded-3xl bg-[#0A0514] border border-white/5 hover:border-emerald-500/30 transition-colors group">*/}
-            {/*            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">*/}
-            {/*                <Zap className="text-emerald-400" size={24} />*/}
-            {/*            </div>*/}
-            {/*            <h3 className="text-xl font-bold text-white mb-3">Lightning Fast</h3>*/}
-            {/*            <p className="text-slate-400 leading-relaxed">*/}
-            {/*                Built on a modern stack for maximum performance. Zero bloat, optimized for developer workflows.*/}
-            {/*            </p>*/}
-            {/*        </div>*/}
-
-            {/*    </div>*/}
-            {/*</section>*/}
         </div>
     );
 }

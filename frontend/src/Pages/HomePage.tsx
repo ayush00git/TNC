@@ -13,7 +13,7 @@ export default function HomePage() {
             {/*<TechStack />*/}
             {/*<ShowCase />*/}
             {/*<ProposedFeatures />*/}
-            <Footer />
+            {/*<Footer />*/}
         </>
     );
 }   

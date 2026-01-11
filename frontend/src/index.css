@@ -6,26 +6,27 @@
     /**
     Surface colors, these are used for big containers
      */
-    --color-surface-lowest: #007bff;
-    --color-surface-low: #007bff;
+    --color-surface-lowest: #010101;
+    --color-surface-low: rgba(255, 255, 255, 0.05);
     --color-surface-high: #007bff;
     --color-surface-highest: #007bff;
-    --color-on-surface: #007bff;
+    --color-on-surface: #dddddd;
     /**
      */
     --color-surface-primary: #000;
-    --color-on-surface-primary: #007bff;
+    --color-on-surface-primary: #dcdcdc;
     --color-surface-secondary: #000;
     --color-on-surface-secondary: #007bff;
 
     /**
     Colors used for buttons, links etc
      */
-    --color-primary: #5173ff;
-    --color-secondary: #849aff;
-    --color-on-primary: #007bff;
+    --color-primary: #6b73ff;
+    --color-secondary: #D3FE3E;
+    --color-on-primary: #000000;
     --color-on-secondary: #007bff;
-
+    --color-primary-mute: rgb(18, 27, 48);
+    --color-on-primary-mute: #e8e8e8;
 }
 *,
 *::before,
@@ -43,10 +44,12 @@ body,
 
 body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background-color: #010409;
+    background-color: var(--color-surface-lowest);
     max-width: 100vw;
 }
-
+h1{
+    font-family: monospace;
+}
 .noise-bg {
     background-image: url('/noise.png');
     background-repeat: repeat;
@@ -161,4 +164,28 @@ body {
         stroke-dashoffset: 0;
         fill-opacity: 1;
     }
+}
+/**
+Page transitions
+ */
+.page-enter {
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.page-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.page-exit-active {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 300ms ease, transform 300ms ease;
 }
