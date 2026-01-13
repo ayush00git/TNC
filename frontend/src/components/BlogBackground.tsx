@@ -25,12 +25,12 @@ export default function BlogBackground({className=""}) {
 
         const RenderSettings = {
             radiusMinFactor: 0.05,// fraction of smallest dimension of screen
-            radiusMaxFactor: 0.1, // fraction of largest dimension of screen
+            radiusMaxFactor: 0.2, // fraction of largest dimension of screen
             thickness: 1,
             color: "#fff",
             velocityFactor: 0.009,
             pointCount: 20,
-            lerpDurationMs: 20000,
+            lerpDurationMs: 10000,
         };
 
         RenderSettings.color = getComputedStyle(

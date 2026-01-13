@@ -82,7 +82,6 @@ const ROOM_DATA: Room[] = [
 ];
 
 const ChatRoomCard = ({ room }: { room: Room }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -171,38 +170,28 @@ const ChatRoomCard = ({ room }: { room: Room }) => {
 
   return (
     <div
-      className={`
+      className="
         group relative flex flex-col justify-between
         h-full p-8 rounded-2xl
-        bg-[#0A0514] border-2 
+        bg-surface-low
         transition-all duration-300 ease-out
-        ${
-          isHovered
-            ? "border-indigo-500/30 shadow-[0_0_30px_-10px_rgba(99,102,241,0.1)]"
-            : "border-white/5"
-        }
-      `}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      "
     >
       {/* Content Section */}
       <div className="space-y-4">
         {/* Header with Icon */}
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-white tracking-wide group-hover:text-indigo-200 transition-colors">
+          <h3 className="text-xl font-semibold text-on-surface tracking-wide group-hover:text-indigo-200 transition-colors">
             {room.title}
           </h3>
           <room.icon
-            className={`
-              w-6 h-6 transition-colors duration-300
-              ${isHovered ? "text-indigo-400" : "text-slate-600"}
-            `}
+            className="w-6 h-6 transition-colors duration-300"
             strokeWidth={1.5}
           />
         </div>
 
         {/* Description */}
-        <p className="text-slate-400 text-sm leading-relaxed font-light min-h-[48px]">
+        <p className="text-on-surface-muted text-sm leading-relaxed font-light min-h-[48px]">
           {room.description}
         </p>
       </div>
@@ -215,29 +204,22 @@ const ChatRoomCard = ({ room }: { room: Room }) => {
           }}
           disabled={isJoining}
           className={`
-            w-full py-3 px-6 rounded-full
-            bg-[#060010] 
-            border-2 ${isJoining ? "cursor-wait opacity-80" : "cursor-pointer"}
+            w-full py-3 px-6 rounded-lg
+            bg-primary-container
+            ${isJoining ? "cursor-wait opacity-80" : "cursor-pointer"}
             text-sm font-medium tracking-wider
             flex items-center justify-center gap-2
             transition-all duration-300 ease-out
-            ${
-              isHovered
-                ? "border-indigo-500/50 text-indigo-100 translate-y-[-2px] shadow-lg shadow-indigo-500/10"
-                : "border-white/5 text-slate-500"
-            }
           `}
         >
           <span>{isJoining ? "Joining..." : "Join Room"}</span>
           <ArrowRight
-            className={`w-4 h-4 transition-transform duration-300 ${
-              isHovered ? "translate-x-1" : ""
-            }`}
+            className="w-4 h-4 transition-transform duration-x-1"
           />
         </button>
 
         {joinError && (
-          <p className="text-xs text-red-400 text-center">{joinError}</p>
+          <p className=" text-xs text-red-400 text-center">{joinError}</p>
         )}
       </div>
     </div>
@@ -250,12 +232,11 @@ const JoinActiveRoom = () => {
       {/* Header Section */}
       <Navbar />
       <div className="max-w-7xl mx-auto px-6 pt-20 pb-12 mt-8 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-500 tracking-tight mb-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-primary">
           Active Rooms
         </h1>
         <p className="text-slate-400 text-lg max-w-2xl mx-auto font-light">
-          Select a domain to connect with peers. Real-time discussions for
-          engineering, design, and casual yapping.
+          Select a domain to connect with peers.
         </p>
       </div>
 
@@ -267,12 +248,6 @@ const JoinActiveRoom = () => {
           ))}
         </div>
       </main>
-
-      {/* Subtle Background Glow Effect */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-900/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-purple-900/5 rounded-full blur-[120px]" />
-      </div>
       <Footer />
     </div>
   );

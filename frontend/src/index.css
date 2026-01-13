@@ -11,9 +11,10 @@
     --color-surface-high: #007bff;
     --color-surface-highest: #007bff;
     --color-on-surface: #dddddd;
+    --color-on-surface-muted: #dddddd;
     /**
      */
-    --color-surface-primary: #000;
+    --color-primary-container: #232435;
     --color-on-surface-primary: #dcdcdc;
     --color-surface-secondary: #000;
     --color-on-surface-secondary: #007bff;
@@ -48,7 +49,7 @@ body {
     max-width: 100vw;
 }
 h1{
-    font-family: monospace;
+    font-family: "JetBrains Mono", monospace;
 }
 .noise-bg {
     background-image: url('/noise.png');

@@ -54,9 +54,7 @@ export default function HeroSection() {
                                 text-on-primary-mute font-medium tracking-wide cursor-pointer
                                 flex items-center justify-center gap-2
                                 transition-all duration-300 ease-out
-                                hover:border-indigo-500/50 hover:text-indigo-100
-                                hover:shadow-lg hover:shadow-indigo-500/10
-                                hover:-translate-y-0.5
+                                hover:border-primary
                                   "
                         >
                         Get the App
