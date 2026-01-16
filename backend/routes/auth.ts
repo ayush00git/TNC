@@ -1,5 +1,5 @@
 import express from "express";
-import { handleUserSignUp, handleUserLogIn, handlerForgetPassViaEmail, handleForgetPassViaOld, changeUserPass, handleVerifyEmail } from "../controllers/auth";
+import { handleUserSignUp, handleUserLogIn, handlerForgetPassViaEmail, handleForgetPassViaOld, changeUserPass, handleVerifyEmail, handleUserLogOut } from "../controllers/auth";
 import { savePushToken } from "../controllers/notification";
 import { allowOnlyAuthenticatedUser } from "../middlewares/auth";
 
@@ -12,4 +12,4 @@ authRoute.post('/forget-password/viaEmail', handlerForgetPassViaEmail)
 authRoute.post('/reset-password', changeUserPass);
 authRoute.get('/verify-acc', handleVerifyEmail);
 authRoute.post('/save-token', allowOnlyAuthenticatedUser, savePushToken);
-
+authRoute.post('/logout', allowOnlyAuthenticatedUser, handleUserLogOut);
