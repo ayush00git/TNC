@@ -2,7 +2,7 @@ import { Types, Schema, model } from "mongoose";
 
 export interface IProject{
   _id: Types.ObjectId,
-  userId: Types.ObjectId,
+  user: Types.ObjectId,
   title: string,
   description: string,
   tags: []string,
@@ -11,7 +11,7 @@ export interface IProject{
 }
 
 const projectSchema: Schema = new Schema({
-  userId: {
+  user: {
       type: Schema.Types.ObjectId,
       ref: 'Auth',
   },
