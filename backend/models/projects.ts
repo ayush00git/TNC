@@ -30,7 +30,7 @@ const projectSchema: Schema = new Schema({
       type: String,
       required: false,
   }
-}, { timeStamps: true } );
+}, { timestamps: true } );
 
 export default model<IProject>("Project", projectSchema);
 
