@@ -5,7 +5,7 @@ export interface IProject{
   user: Types.ObjectId,
   title: string,
   description: string,
-  tags: []string,
+  tags: string[],
   githubLink: string,
   liveLink: string,
 }

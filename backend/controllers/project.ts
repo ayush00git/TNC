@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import Project from "../models/project.ts";
+import Project from "../models/project";
 
 
 // get api endpoint for all the projects
 export const getAllProjects = async (req: Request, res: Response) => {
   try{
-    const projects = await Project.Find({}).populate("user", "name email");
+    const projects = await Project.find({}).populate("user", "name email");
     return res.status(200).json({
       "message": "Projects fetched successfully!",
       projects,
@@ -28,15 +28,15 @@ export const postAProject = async(req: Request, res: Response) => {
   }
 
   try{
-    const project = new Project{
+    const project = new Project({
       user: userId,
       title,
       description,
       tags,
       githubLink,
       liveLink,
-    }
-    await Project.save()
+    })
+    await project.save()
     return res.status(201).json({
       "success": "true",
       "message": "Project uploaded successfully!",
@@ -51,7 +51,7 @@ export const postAProject = async(req: Request, res: Response) => {
 export const getProjectById = async(req: Request, res: Response) => {
   const { projectId } = req.params;
   try{
-    const project = await Project.FindOne({ "_id": projectId }).populate("user", "name email");
+    const project = await Project.findOne({ "_id": projectId }).populate("user", "name email");
     return res.status(200).json({
       "success": "true",
       project
@@ -64,18 +64,18 @@ export const getProjectById = async(req: Request, res: Response) => {
 
 export const deleteProjectById = async(req: Request, res: Response) => {
   const { projectId } = req.params;
-  const userId = req.user._id;
+  const userId = req.user?._id;
 
   try{
-    const reqProject = await Project.FindOne({ "_id": projectId });
-    if reqProject.user._id.toString() !== userId.toString() {
+    const reqProject = await Project.findOne({ "_id": projectId });
+    if (reqProject?.user._id.toString() !== userId?.toString()) {
       return res.status(401).json({
         "success": "false",
         "message": "You are not authorized for this action"
       });
     }
     
-    const project = await Project.FindOneAndDelete({ "_id": projectId });
+    const project = await Project.findOneAndDelete({ "_id": projectId });
     return res.status(200).json({
       "success": "true",
       "message": "Project deleted successfully!",
