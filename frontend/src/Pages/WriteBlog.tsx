@@ -234,7 +234,7 @@ const WriteBlog = () => {
                                     className="w-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-4 h-[600px] resize-y focus:outline-none placeholder:text-[#30363d] border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1 scrollbar-hide"
                                 />
                             ) : (
-                                <div className="w-full bg-[#0d1117]/50 p-8 h-[600px] overflow-y-auto border-l-2 border-[#30363d] ml-1">
+                                <div className="w-full bg-[#0d1117]/50 p-8 h-[600px] overflow-y-auto border-l-2 border-[#30363d] ml-1 scrollbar-hide">
                                     {content ? (
                                         <div className="prose prose-invert prose-lg max-w-none">
                                             <ReactMarkdown
@@ -296,7 +296,7 @@ const WriteBlog = () => {
             {/* Fullscreen Content Editor */}
             {isFullscreen && (
                 <div className="fixed inset-0 z-50 bg-[#060010] flex flex-col animate-in fade-in duration-300">
-                    <div className="flex-1 flex flex-col p-8">
+                    <div className="flex-1 flex flex-col p-8 min-h-0">
                         {/* Header with Write/Preview toggles */}
                         <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#30363d]">
                             <div className="flex gap-4">
@@ -325,7 +325,7 @@ const WriteBlog = () => {
                         </div>
 
                         {/* Content Area */}
-                        <div className="flex-1 overflow-hidden">
+                        <div className="flex-1 overflow-hidden min-h-0">
                             {viewMode === 'write' ? (
                                 <textarea
                                     value={content}
