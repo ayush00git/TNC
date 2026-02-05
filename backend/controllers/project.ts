@@ -102,7 +102,7 @@ export const editProjectById = async(req: Request, res: Response) => {
     if (reqProject?.user._id.toString() !== userId?.toString()) {
       return res.status(401).json({
         "success": "false",
-        "message": "You are not authorized for this"
+        "message": "You are not authorized for this action"
       })
     }
 
