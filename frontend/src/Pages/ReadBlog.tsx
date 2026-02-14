@@ -72,7 +72,7 @@ const ReadBlog = () => {
     if (loading) {
         return (
             <>
-                <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-sans">
+                <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-serif">
                     <Navbar />
                     <div className="pt-24 pb-32 flex items-center justify-center min-h-screen">
                         <div className="text-center">
@@ -89,7 +89,7 @@ const ReadBlog = () => {
     if (error || !post) {
         return (
             <>
-                <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-sans">
+                <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-serif">
                     <Navbar />
                     <div className="pt-24 pb-32 flex items-center justify-center min-h-screen">
                         <div className="text-center max-w-md">
@@ -112,13 +112,13 @@ const ReadBlog = () => {
 
     return (
         <>
-            <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-sans selection:bg-white selection:text-black">
+            <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-serif selection:bg-white selection:text-black">
                 <Navbar />
 
                 <div className="pt-24 pb-32">
-                    <div className="max-w-8xl mx-auto px-6 lg:px-12">
+                        <div className="max-w-4xl mx-auto px-6 lg:px-12">
                         {/* Reader Header */}
-                        <div className="flex justify-between items-center mb-12 pb-6 border-b border-[#30363d]">
+                        <div className="flex justify-between items-center mb-8 pb-4 border-b border-[#30363d]">
                             <div className="flex items-center gap-2 text-[#8b949e] font-mono text-xs">
                                 <TerminalIcon size={14} />
                                 <span>~/logs/{post._id}</span>
@@ -132,7 +132,7 @@ const ReadBlog = () => {
                         </div>
 
                         {/* Title Block */}
-                        <div className="mb-16 border-b border-[#30363d] pb-10">
+                        <div className="mb-12 border-b border-[#30363d] pb-8">
                             {post.tags && post.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mb-8">
                                     {post.tags.map(tag => (
@@ -145,10 +145,10 @@ const ReadBlog = () => {
                                     ))}
                                 </div>
                             )}
-                            <h1 className="text-5xl md:text-7xl font-black text-white mb-8 leading-tight tracking-tight uppercase">
+                            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">
                                 {post.title}
                             </h1>
-                            <div className="flex flex-col md:flex-row md:items-center gap-6 text-[#8b949e] font-mono text-sm uppercase tracking-widest border-l-2 border-[#30363d] pl-4">
+                            <div className="flex flex-col md:flex-row md:items-center gap-4 text-[#8b949e] text-sm border-l-2 border-[#30363d] pl-4">
                                 <span>{formatDate(post.createdAt)}</span>
                                 <span className="hidden md:inline">/</span>
                                 <span>{post.readTime}</span>
@@ -163,7 +163,7 @@ const ReadBlog = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="prose prose-invert prose-lg max-w-none text-[#c9d1d9] font-light leading-loose selection:bg-white selection:text-black">
+                        <div className="prose prose-invert prose-lg mx-auto max-w-3xl text-[#c9d1d9] leading-relaxed selection:bg-white selection:text-black">
                             <ReactMarkdown
                                 rehypePlugins={[rehypeRaw]}
                                 remarkPlugins={[remarkBreaks]}
