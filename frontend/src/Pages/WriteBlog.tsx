@@ -5,6 +5,7 @@ import Navbar from '../components/NavBar';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
+import rehypeHighlight from 'rehype-highlight';
 
 const WriteBlog = () => {
     const navigate = useNavigate();
@@ -120,7 +121,7 @@ const WriteBlog = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-sans selection:bg-white selection:text-black">
+        <div className="min-h-screen bg-[#060010] text-[#c9d1d9] selection:bg-white selection:text-black">
             <Navbar />
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pt-32 pb-20">
                 {/* Header */}
@@ -231,14 +232,14 @@ const WriteBlog = () => {
                                     value={content}
                                     onChange={(e) => setContent(e.target.value)}
                                     placeholder="Begin log entry... (Markdown & HTML supported)"
-                                    className="w-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-4 h-[600px] resize-y focus:outline-none placeholder:text-[#30363d] border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1 scrollbar-hide"
+                                    className="w-full bg-transparent text-[#c9d1d9] text-xl md:text-2xl font-light leading-loose p-4 h-[600px] resize-y focus:outline-none placeholder:text-[#30363d] border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1 scrollbar-hide"
                                 />
                             ) : (
                                 <div className="w-full bg-[#0d1117]/50 p-8 h-[600px] overflow-y-auto border-l-2 border-[#30363d] ml-1 scrollbar-hide">
                                     {content ? (
                                         <div className="prose prose-invert prose-lg max-w-none">
                                             <ReactMarkdown
-                                                rehypePlugins={[rehypeRaw]}
+                                                rehypePlugins={[rehypeRaw, rehypeHighlight]}
                                                 remarkPlugins={[remarkBreaks]}
                                             >
                                                 {content}
@@ -331,7 +332,7 @@ const WriteBlog = () => {
                                     value={content}
                                     onChange={(e) => setContent(e.target.value)}
                                     placeholder="Begin log entry... (Markdown & HTML supported)"
-                                    className="w-full h-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-6 resize-none focus:outline-none placeholder:text-[#30363d] scrollbar-hide"
+                                    className="w-full h-full bg-transparent text-[#c9d1d9] text-xl md:text-2xl font-light leading-loose p-6 resize-none focus:outline-none placeholder:text-[#30363d] scrollbar-hide"
                                     autoFocus
                                 />
                             ) : (
@@ -339,7 +340,7 @@ const WriteBlog = () => {
                                     {content ? (
                                         <div className="prose prose-invert prose-lg max-w-none">
                                             <ReactMarkdown
-                                                rehypePlugins={[rehypeRaw]}
+                                                rehypePlugins={[rehypeRaw, rehypeHighlight]}
                                                 remarkPlugins={[remarkBreaks]}
                                             >
                                                 {content}
