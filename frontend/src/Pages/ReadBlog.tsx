@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
+import rehypeHighlight from 'rehype-highlight';
 
 interface BlogPost {
     _id: string;
@@ -72,7 +73,7 @@ const ReadBlog = () => {
     if (loading) {
         return (
             <>
-                <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-serif">
+                <div className="min-h-screen bg-[#060010] text-[#c9d1d9]">
                     <Navbar />
                     <div className="pt-24 pb-32 flex items-center justify-center min-h-screen">
                         <div className="text-center">
@@ -89,7 +90,7 @@ const ReadBlog = () => {
     if (error || !post) {
         return (
             <>
-                <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-serif">
+                <div className="min-h-screen bg-[#060010] text-[#c9d1d9]">
                     <Navbar />
                     <div className="pt-24 pb-32 flex items-center justify-center min-h-screen">
                         <div className="text-center max-w-md">
@@ -112,7 +113,7 @@ const ReadBlog = () => {
 
     return (
         <>
-            <div className="min-h-screen bg-[#060010] text-[#c9d1d9] font-serif selection:bg-white selection:text-black">
+            <div className="min-h-screen bg-[#060010] text-[#c9d1d9] selection:bg-white selection:text-black">
                 <Navbar />
 
                 <div className="pt-24 pb-32">
@@ -165,7 +166,7 @@ const ReadBlog = () => {
                         {/* Content */}
                         <div className="prose prose-invert prose-lg mx-auto max-w-3xl text-[#c9d1d9] leading-relaxed selection:bg-white selection:text-black">
                             <ReactMarkdown
-                                rehypePlugins={[rehypeRaw]}
+                                rehypePlugins={[rehypeRaw, rehypeHighlight]}
                                 remarkPlugins={[remarkBreaks]}
                             >
                                 {post.content}
