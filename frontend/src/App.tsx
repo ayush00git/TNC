@@ -15,6 +15,8 @@ import ReadBlog from "./Pages/ReadBlog";
 import MyBlogsPage from "./Pages/MyBlogsPage";
 import EditBlog from "./Pages/EditBlog";
 import PostFeature from "./Pages/PostFeature";
+import ProjectPage from "./Pages/ProjectPage";
+
 
 
 function App() {
@@ -52,7 +54,9 @@ function App() {
         <Route path="/write-blog" element={<WriteBlog />} />
         <Route path="/edit-blog/:blogId" element={<EditBlog />} />
         <Route path="/post-project" element={<PostFeature />} />
+        <Route path="/projects" element={<ProjectPage />} />
       </Routes>
+
 
     </>
   );
