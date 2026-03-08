@@ -20,7 +20,7 @@ export const allowOnlyAuthenticatedUser = async (req: Request, res: Response, ne
     try {
         const user = await Auth.findOne({ email: decoded.email });
         if(!user) {
-            return res.status(400).json({ message: "Need to have an account for login" });
+            return res.status(400).json({ message: "Login or Create an account first" });
         }
         req.user = user;
         next();
