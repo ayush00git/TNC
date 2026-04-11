@@ -7,6 +7,7 @@ export interface IBlog {
 	excerpt: string,
 	tags: string[],
 	content: string,
+	imageURL: string[],
     isDraft: boolean,
 }
 
@@ -29,6 +30,10 @@ const blogSchema: Schema = new Schema({
 	content: {
 		type: String,
 		required: true,
+	},
+	imageURL: {
+		type: [String],
+		default: " ",
 	},
     isDraft: {
 		type: Boolean,
