@@ -21,6 +21,8 @@ const WriteBlog = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
     const editorRef = useRef<HTMLTextAreaElement>(null);
+    const [isImageUploading, setIsImageUploading] = useState(false);
+    const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
 
     // Capture cursor position before switching views
     const captureSelection = () => {
@@ -94,6 +96,66 @@ const WriteBlog = () => {
         setTags(tags.filter(tag => tag !== tagToRemove));
     };
 
+    const insertTextAtCursor = (textArea: HTMLTextAreaElement, insertion: string) => {
+        if (!textArea) {
+            setContent((prev) => `${prev}${insertion}`);
+            return;
+        }
+
+        const start = textArea.selectionStart ?? textArea.value.length;
+        const end = textArea.selectionEnd ?? textArea.value.length;
+        const currentValue = textArea.value;
+        const nextValue = `${currentValue.slice(0, start)}${insertion}${currentValue.slice(end)}`;
+        setContent(nextValue);
+
+        requestAnimationFrame(() => {
+            if (typeof textArea.setSelectionRange === 'function') {
+                const caret = start + insertion.length;
+                textArea.setSelectionRange(caret, caret);
+            }
+        });
+    };
+
+    const uploadPastedImage = async (file: File): Promise<string> => {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch('/api/blog/upload-image', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.message || 'Unable to upload pasted image');
+        }
+
+        const data = await response.json();
+        return data.imageURL || data.url;
+    };
+
+    const handlePaste = async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const clipboardItems = Array.from(event.clipboardData.items || []);
+        const imageItem = clipboardItems.find(item => item.type.startsWith('image/'));
+        if (!imageItem) return;
+
+        event.preventDefault();
+        const file = imageItem.getAsFile();
+        if (!file) return;
+
+        try {
+            setError('');
+            setIsImageUploading(true);
+            const imageUrl = await uploadPastedImage(file);
+            setUploadedImageUrls((prev) => [...prev, imageUrl]);
+            insertTextAtCursor(event.currentTarget, `![pasted image](${imageUrl})\n`);
+        } catch (err: any) {
+            setError(err?.message || 'Image upload failed');
+        } finally {
+            setIsImageUploading(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -116,6 +178,7 @@ const WriteBlog = () => {
                     excerpt,
                     tags,
                     content,
+                    imageURL: uploadedImageUrls,
                     isDraft: false,
                 }),
             });
@@ -154,6 +217,7 @@ const WriteBlog = () => {
                     excerpt,
                     tags,
                     content,
+                    imageURL: uploadedImageUrls,
                     isDraft: true,
                 }),
             });
@@ -260,7 +324,7 @@ const WriteBlog = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-mono text-[#8b949e] uppercase tracking-[0.2em] block ml-1">Metadata Tags [{tags.length}/4]</label>
-                                        <div className="flex flex-wrap gap-2 p-2 min-h-[40px]">
+                                        <div className="flex flex-wrap gap-2 p-2 min-h-10">
                                             {tags.map(tag => (
                                                 <span key={tag} className="flex items-center gap-2 bg-[#161b22] border border-[#30363d] text-[#00ffff] px-3 py-1 text-[10px] font-mono uppercase tracking-wider">
                                                     {tag}
@@ -274,7 +338,7 @@ const WriteBlog = () => {
                                                     onChange={(e) => setCurrentTag(e.target.value)}
                                                     onKeyDown={handleTagKeyDown}
                                                     placeholder="ADD_TAG"
-                                                    className="bg-transparent border-none text-[10px] font-mono uppercase focus:outline-none w-[80px] py-1 placeholder:text-[#30363d]"
+                                                    className="bg-transparent border-none text-[10px] font-mono uppercase focus:outline-none w-20 py-1 placeholder:text-[#30363d]"
                                                 />
                                             )}
                                         </div>
@@ -301,9 +365,14 @@ const WriteBlog = () => {
                                 {/* Content Input */}
                                 <div className="space-y-2 relative group">
                                     <label className="text-[10px] font-mono text-[#8b949e] uppercase tracking-[0.2em] block ml-1">Main Content (Markdown)</label>
+                                    <p className="text-[10px] text-[#8b949e] uppercase tracking-[0.2em] ml-1">Paste images directly into the editor to upload and embed them.</p>
+                                    {isImageUploading && (
+                                        <p className="text-[10px] text-[#58a6ff] uppercase tracking-[0.2em] ml-1">Uploading image...</p>
+                                    )}
                                     <textarea
                                         ref={editorRef}
                                         value={content}
+                                        onPaste={handlePaste}
                                         onChange={(e) => setContent(e.target.value)}
                                         placeholder="Begin entry... Markdown and HTML supported."
                                         className="w-full bg-[#080212] text-[#c9d1d9] text-xl md:text-2xl font-light leading-relaxed p-8 h-[800px] resize-y focus:outline-none placeholder:text-[#30363d] border border-[#30363d] focus:border-[#ff0080]/30 transition-colors scrollbar-hide rounded-lg"
@@ -321,15 +390,6 @@ const WriteBlog = () => {
                             <div className="bg-[#010409]/30 rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {/* Preview Container aligned with ReadBlog */}
                                 <div className="max-w-6xl mx-auto py-12 px-6 lg:px-12">
-                                    {/* Reader Header Mock */}
-                                    <div className="flex justify-between items-center mb-8 pb-4 border-b border-[#30363d]">
-                                        <div className="flex items-center gap-2 text-[#8b949e] font-mono text-xs">
-                                            <TerminalIcon size={14} />
-                                            <span>~/drafts/preview_mode</span>
-                                        </div>
-                                        <div className="text-[10px] font-mono text-[#58a6ff] uppercase tracking-widest">Render: Dynamic</div>
-                                    </div>
-
                                     {/* Title Block Mock */}
                                     <div className="mb-12 border-b border-[#30363d] pb-8">
                                         {tags.length > 0 && (
@@ -421,6 +481,7 @@ const WriteBlog = () => {
                                 <textarea
                                     ref={editorRef}
                                     value={content}
+                                    onPaste={handlePaste}
                                     onChange={(e) => setContent(e.target.value)}
                                     className="w-full h-full bg-transparent text-[#c9d1d9] text-2xl font-light leading-relaxed p-12 resize-none focus:outline-none placeholder:text-[#30363d] scrollbar-hide max-w-5xl mx-auto block"
                                     autoFocus

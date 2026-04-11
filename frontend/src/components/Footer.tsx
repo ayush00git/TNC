@@ -27,7 +27,7 @@ export default function Footer() {
              <a href="https://x.com/AyushKumar_S" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-sky-500 hover:bg-sky-500/10 transition-all" aria-label="Twitter">
                 <BsTwitterX size={20} />
              </a>
-             <a href="https://cli.ayushz.me" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-sky-500 hover:bg-sky-500/10 transition-all" aria-label="Twitter">
+             <a href="https://www.ayushz.me" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-sky-500 hover:bg-sky-500/10 transition-all" aria-label="Twitter">
                 <User size={20} />
              </a>
           </div>

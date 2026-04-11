@@ -8,7 +8,7 @@ import { Expo } from "expo-server-sdk";
 export const sendChat = async (req: Request, res: Response) => {
     try {
         const { text } = req.body;
-        const { roomId } = req.params; // Incorrect: Route is POST / so room is in body
+        const { roomId } = req.params;
         const sender = req.user?._id;
         const image = req.file;
 
@@ -36,7 +36,7 @@ export const sendChat = async (req: Request, res: Response) => {
         const chatMessage = await Chat.create({
             sender,
             text,
-            room: room._id, // Use the resolved MongoDB _id
+            room: room._id,
             imageURL: imageUrl,
         })
         const populatedMessage = await chatMessage.populate("sender", "name email");
@@ -64,8 +64,6 @@ export const sendChat = async (req: Request, res: Response) => {
                     }
                 });
 
-                console.log(`[DEBUG] Connected users in room: ${connectedUserIds.size}`);
-
                 const pushTokens: string[] = [];
                 roomDoc.members.forEach((member: any) => {
                     const memberId = member._id.toString();
@@ -74,8 +72,6 @@ export const sendChat = async (req: Request, res: Response) => {
                         pushTokens.push(member.expoPushToken);
                     }
                 });
-
-                console.log(`[DEBUG] Offline users to notify: ${pushTokens.length}`);
 
                 if (pushTokens.length > 0) {
                     const expo = new Expo();
@@ -93,15 +89,13 @@ export const sendChat = async (req: Request, res: Response) => {
                     for (const chunk of chunks) {
                         try {
                             const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-                            console.log(`[DEBUG] Notification sent to ${chunk.length} offline users`);
                         } catch (error) {
-                            console.error("[DEBUG] Error sending push notification chunk:", error);
                         }
                     }
                 }
             }
         } catch (notifError) {
-            console.error("[DEBUG] Error processing notifications:", notifError);
+            console.error("Error processing notifications:", notifError);
         }
 
         return res.status(200).json(populatedMessage);
