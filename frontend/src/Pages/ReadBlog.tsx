@@ -13,6 +13,7 @@ interface BlogPost {
     title: string;
     excerpt: string;
     content: string;
+    imageURL?: string[];
     tags: string[];
     readTime: string;
     createdAt: string;
@@ -38,6 +39,15 @@ const ReadBlog = () => {
             day: 'numeric'
         });
     };
+
+    const coverImageUrl = post?.imageURL?.find(url => post?.content && !post.content.includes(url));
+
+    const normalizeImagePlaceholders = (content: string, imageUrls: string[]) => {
+        let index = 0;
+        return content.replace(/uploaded_image-[A-Za-z0-9_-]+/g, () => imageUrls[index++] || '');
+    };
+
+    const renderedContent = post ? normalizeImagePlaceholders(post.content, post.imageURL || []) : '';
 
     useEffect(() => {
         const fetchBlog = async () => {
@@ -155,6 +165,13 @@ const ReadBlog = () => {
                                 <span>{post.readTime}</span>
                             </div>
                             {/* User Info */}
+                            {coverImageUrl && (
+                                <img
+                                    src={coverImageUrl}
+                                    alt={post.title}
+                                    className="w-full rounded-3xl mb-10 object-cover border border-[#30363d]"
+                                />
+                            )}
                             {post.user && (
                                 <div className="flex flex-col gap-1 mt-8 text-sm font-mono text-[#8b949e]">
                                     <span className="text-white font-bold">Author: {post.user.name}</span>
@@ -169,7 +186,7 @@ const ReadBlog = () => {
                                 rehypePlugins={[rehypeRaw, rehypeHighlight]}
                                 remarkPlugins={[remarkBreaks]}
                             >
-                                {post.content}
+                                {renderedContent}
                             </ReactMarkdown>
                         </div>
 

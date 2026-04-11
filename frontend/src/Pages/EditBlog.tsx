@@ -19,6 +19,17 @@ const EditBlog = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isImageUploading, setIsImageUploading] = useState(false);
+    const [imageMap, setImageMap] = useState<{ key: string; url: string }[]>([]);
+
+    const generateImageKey = () => `uploaded_image-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+    const resolvePreviewContent = (sourceContent: string) => {
+        return sourceContent.replace(/uploaded_image-[A-Za-z0-9_-]+/g, (key) => {
+            const mapping = imageMap.find((item) => item.key === key);
+            return mapping?.url || key;
+        });
+    };
 
     // Fetch existing blog data
     useEffect(() => {
@@ -32,12 +43,25 @@ const EditBlog = () => {
                 }
 
                 const data = await response.json();
+                const existingImageURLs: string[] = Array.isArray(data.imageURL) ? data.imageURL : [];
+                const initialImageMap = existingImageURLs.map((url, index) => ({
+                    key: `uploaded_image-${index + 1}`,
+                    url,
+                }));
+
+                let normalizedContent = data.content || '';
+                initialImageMap.forEach(({ key, url }) => {
+                    if (normalizedContent.includes(url)) {
+                        normalizedContent = normalizedContent.split(url).join(key);
+                    }
+                });
 
                 // Pre-populate form fields
                 setTitle(data.title || '');
                 setExcerpt(data.excerpt || '');
-                setContent(data.content || '');
+                setContent(normalizedContent);
                 setTags(data.tags || []);
+                setImageMap(initialImageMap);
             } catch (err: any) {
                 setError(err.message || 'Failed to load blog');
                 console.error('Error fetching blog:', err);
@@ -75,6 +99,67 @@ const EditBlog = () => {
         setTags(tags.filter(tag => tag !== tagToRemove));
     };
 
+    const insertTextAtCursor = (textArea: HTMLTextAreaElement, insertion: string) => {
+        if (!textArea) {
+            setContent((prev) => `${prev}${insertion}`);
+            return;
+        }
+
+        const start = textArea.selectionStart ?? textArea.value.length;
+        const end = textArea.selectionEnd ?? textArea.value.length;
+        const currentValue = textArea.value;
+        const nextValue = `${currentValue.slice(0, start)}${insertion}${currentValue.slice(end)}`;
+        setContent(nextValue);
+
+        requestAnimationFrame(() => {
+            if (typeof textArea.setSelectionRange === 'function') {
+                const caret = start + insertion.length;
+                textArea.setSelectionRange(caret, caret);
+            }
+        });
+    };
+
+    const uploadPastedImage = async (file: File): Promise<string> => {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch('/api/blog/upload-image', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.message || 'Unable to upload pasted image');
+        }
+
+        const data = await response.json();
+        return data.imageURL || data.url;
+    };
+
+    const handlePaste = async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const clipboardItems = Array.from(event.clipboardData.items || []);
+        const imageItem = clipboardItems.find(item => item.type.startsWith('image/'));
+        if (!imageItem) return;
+
+        event.preventDefault();
+        const file = imageItem.getAsFile();
+        if (!file) return;
+
+        try {
+            setError('');
+            setIsImageUploading(true);
+            const imageUrl = await uploadPastedImage(file);
+            const key = generateImageKey();
+            setImageMap((prev) => [...prev, { key, url: imageUrl }]);
+            insertTextAtCursor(event.currentTarget, `![pasted image](${key})\n`);
+        } catch (err: any) {
+            setError(err?.message || 'Image upload failed');
+        } finally {
+            setIsImageUploading(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -97,6 +182,7 @@ const EditBlog = () => {
                     excerpt,
                     tags,
                     content,
+                    imageURL: imageMap.map((image) => image.url),
                     isDraft: false,
                 }),
             });
@@ -135,6 +221,7 @@ const EditBlog = () => {
                     excerpt,
                     tags,
                     content,
+                    imageURL: imageMap.map((image) => image.url),
                     isDraft: true,
                 }),
             });
@@ -274,12 +361,19 @@ const EditBlog = () => {
 
                         <div className="relative">
                             {viewMode === 'write' ? (
-                                <textarea
-                                    value={content}
-                                    onChange={(e) => setContent(e.target.value)}
-                                    placeholder="Begin log entry... (Markdown & HTML supported)"
-                                    className="w-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-4 h-[600px] resize-y focus:outline-none placeholder:text-[#30363d] border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1 scrollbar-hide"
-                                />
+                                <>
+                                    <p className="text-[10px] text-[#8b949e] uppercase tracking-widest ml-1 mb-2">Paste images directly into the editor and they will be uploaded automatically.</p>
+                                    {isImageUploading && (
+                                        <p className="text-[10px] text-[#58a6ff] uppercase tracking-widest ml-1 mb-2">Uploading image...</p>
+                                    )}
+                                    <textarea
+                                        value={content}
+                                        onPaste={handlePaste}
+                                        onChange={(e) => setContent(e.target.value)}
+                                        placeholder="Begin log entry... (Markdown & HTML supported)"
+                                        className="w-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-4 h-[600px] resize-y focus:outline-none placeholder:text-[#30363d] border-l-2 border-[#30363d] focus:border-[#c9d1d9] transition-colors ml-1 scrollbar-hide"
+                                    />
+                                </>
                             ) : (
                                 <div className="w-full bg-[#0d1117]/50 p-8 h-[600px] overflow-y-auto border-l-2 border-[#30363d] ml-1">
                                     {content ? (
@@ -288,7 +382,7 @@ const EditBlog = () => {
                                                 rehypePlugins={[rehypeRaw]}
                                                 remarkPlugins={[remarkBreaks]}
                                             >
-                                                {content}
+                                                {resolvePreviewContent(content)}
                                             </ReactMarkdown>
                                         </div>
                                     ) : (
@@ -376,6 +470,7 @@ const EditBlog = () => {
                             {viewMode === 'write' ? (
                                 <textarea
                                     value={content}
+                                    onPaste={handlePaste}
                                     onChange={(e) => setContent(e.target.value)}
                                     placeholder="Begin log entry... (Markdown & HTML supported)"
                                     className="w-full h-full bg-transparent text-[#c9d1d9] text-lg leading-loose p-6 resize-none focus:outline-none placeholder:text-[#30363d] scrollbar-hide"
@@ -389,7 +484,7 @@ const EditBlog = () => {
                                                 rehypePlugins={[rehypeRaw]}
                                                 remarkPlugins={[remarkBreaks]}
                                             >
-                                                {content}
+                                                {resolvePreviewContent(content)}
                                             </ReactMarkdown>
                                         </div>
                                     ) : (

@@ -47,7 +47,7 @@ export const getBlogsHandler = async (req: Request, res: Response) => {
 };
 
 export const postBlogHandler = async (req: Request, res: Response) => {
-	const { title, excerpt, tags, content, isDraft } = req.body;
+	const { title, excerpt, tags, content, isDraft, imageURL } = req.body;
 	const userId = req.user;
 
 	if (!title || !excerpt || !content) {
@@ -56,7 +56,9 @@ export const postBlogHandler = async (req: Request, res: Response) => {
 
 	try {
 		const files = extractFilesFromRequest(req);
-		const imageURL = files.length ? await uploadImages(files) : [];
+		const bodyImageURLs = Array.isArray(imageURL) ? imageURL : [];
+		const fileImageURLs = files.length ? await uploadImages(files) : [];
+		const finalImageURLs = [...bodyImageURLs, ...fileImageURLs];
 
 		const blog = new Blog({
 			user: userId,
@@ -64,7 +66,7 @@ export const postBlogHandler = async (req: Request, res: Response) => {
 			excerpt,
 			tags,
 			content,
-			imageURL,
+			imageURL: finalImageURLs,
             isDraft,
 		});
 		await blog.save();
@@ -126,10 +128,10 @@ export const getUsersBlogsHandler = async (req: Request, res: Response) => {
 export const editBlogHandler = async (req: Request, res: Response) => {
     const { blogId } = req.params;
     if( !blogId ) {
-        return res.status(400).json({ message: "Please specify the blog you're trying to edit" });
+        return res.status(400).json({ message: "blog entry not found or may have been moved to a different url" });
     }
     try {
-        const { title, excerpt, tags, content, isDraft } = req.body;
+        const { title, excerpt, tags, content, isDraft, imageURL } = req.body;
         if( !title || !excerpt || !tags || !content ) {
             return res.status(400).json({ messages: "Fields can't be kept empty" });
         }
@@ -140,8 +142,9 @@ export const editBlogHandler = async (req: Request, res: Response) => {
         }
 
         const files = extractFilesFromRequest(req);
-        const uploadedImageURLs = files.length ? await uploadImages(files) : [];
-		const imageURL = reqBlog?.imageURL || [];
+        const bodyImageURLs = Array.isArray(imageURL) ? imageURL : [];
+        const fileImageURLs = files.length ? await uploadImages(files) : [];
+        const finalImageURLs = bodyImageURLs.length ? [...bodyImageURLs, ...fileImageURLs] : [...(reqBlog?.imageURL || []), ...fileImageURLs];
 
         const editBlog = await Blog.findOneAndUpdate( { _id: blogId }, { 
             title,
@@ -149,7 +152,7 @@ export const editBlogHandler = async (req: Request, res: Response) => {
             tags,
             content,
             isDraft,
-            ...(uploadedImageURLs.length ? { imageURL: [...imageURL, ...uploadedImageURLs] } : {}),
+            imageURL: finalImageURLs,
         }, { new: true } );
         return res.status(200).json({ message: "Blog edited successfully", blog: editBlog });
     }catch(error) {
