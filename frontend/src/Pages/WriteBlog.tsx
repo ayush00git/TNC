@@ -22,16 +22,7 @@ const WriteBlog = () => {
     const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
     const editorRef = useRef<HTMLTextAreaElement>(null);
     const [isImageUploading, setIsImageUploading] = useState(false);
-    const [imageMap, setImageMap] = useState<{ key: string; url: string }[]>([]);
-
-    const generateImageKey = () => `uploaded_image-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-
-    const resolvePreviewContent = (sourceContent: string) => {
-        return sourceContent.replace(/uploaded_image-[A-Za-z0-9_-]+/g, (key) => {
-            const mapping = imageMap.find((item) => item.key === key);
-            return mapping?.url || key;
-        });
-    };
+    const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
 
     // Capture cursor position before switching views
     const captureSelection = () => {
@@ -156,9 +147,8 @@ const WriteBlog = () => {
             setError('');
             setIsImageUploading(true);
             const imageUrl = await uploadPastedImage(file);
-            const key = generateImageKey();
-            setImageMap((prev) => [...prev, { key, url: imageUrl }]);
-            insertTextAtCursor(event.currentTarget, `![pasted image](${key})\n`);
+            setUploadedImageUrls((prev) => [...prev, imageUrl]);
+            insertTextAtCursor(event.currentTarget, `![pasted image](${imageUrl})\n`);
         } catch (err: any) {
             setError(err?.message || 'Image upload failed');
         } finally {
@@ -188,7 +178,7 @@ const WriteBlog = () => {
                     excerpt,
                     tags,
                     content,
-                    imageURL: imageMap.map((image) => image.url),
+                    imageURL: uploadedImageUrls,
                     isDraft: false,
                 }),
             });
@@ -227,7 +217,7 @@ const WriteBlog = () => {
                     excerpt,
                     tags,
                     content,
-                    imageURL: imageMap.map((image) => image.url),
+                    imageURL: uploadedImageUrls,
                     isDraft: true,
                 }),
             });
@@ -428,7 +418,7 @@ const WriteBlog = () => {
                                                 rehypePlugins={[rehypeRaw, rehypeHighlight]}
                                                 remarkPlugins={[remarkBreaks]}
                                             >
-                                                {resolvePreviewContent(content)}
+                                                {content}
                                             </ReactMarkdown>
                                         ) : (
                                             <div className="h-48 flex items-center justify-center text-[#30363d] font-mono text-sm uppercase tracking-widest border border-dashed border-[#30363d] rounded-lg">
@@ -513,7 +503,7 @@ const WriteBlog = () => {
                                                 rehypePlugins={[rehypeRaw, rehypeHighlight]}
                                                 remarkPlugins={[remarkBreaks]}
                                             >
-                                                {resolvePreviewContent(content)}
+                                                {content}
                                             </ReactMarkdown>
                                         </div>
                                     </div>

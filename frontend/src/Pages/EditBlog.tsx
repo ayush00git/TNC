@@ -20,16 +20,7 @@ const EditBlog = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isImageUploading, setIsImageUploading] = useState(false);
-    const [imageMap, setImageMap] = useState<{ key: string; url: string }[]>([]);
-
-    const generateImageKey = () => `uploaded_image-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-
-    const resolvePreviewContent = (sourceContent: string) => {
-        return sourceContent.replace(/uploaded_image-[A-Za-z0-9_-]+/g, (key) => {
-            const mapping = imageMap.find((item) => item.key === key);
-            return mapping?.url || key;
-        });
-    };
+    const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
 
     // Fetch existing blog data
     useEffect(() => {
@@ -44,24 +35,13 @@ const EditBlog = () => {
 
                 const data = await response.json();
                 const existingImageURLs: string[] = Array.isArray(data.imageURL) ? data.imageURL : [];
-                const initialImageMap = existingImageURLs.map((url, index) => ({
-                    key: `uploaded_image-${index + 1}`,
-                    url,
-                }));
-
-                let normalizedContent = data.content || '';
-                initialImageMap.forEach(({ key, url }) => {
-                    if (normalizedContent.includes(url)) {
-                        normalizedContent = normalizedContent.split(url).join(key);
-                    }
-                });
 
                 // Pre-populate form fields
                 setTitle(data.title || '');
                 setExcerpt(data.excerpt || '');
-                setContent(normalizedContent);
+                setContent(data.content || '');
                 setTags(data.tags || []);
-                setImageMap(initialImageMap);
+                setUploadedImageUrls(existingImageURLs);
             } catch (err: any) {
                 setError(err.message || 'Failed to load blog');
                 console.error('Error fetching blog:', err);
@@ -150,9 +130,8 @@ const EditBlog = () => {
             setError('');
             setIsImageUploading(true);
             const imageUrl = await uploadPastedImage(file);
-            const key = generateImageKey();
-            setImageMap((prev) => [...prev, { key, url: imageUrl }]);
-            insertTextAtCursor(event.currentTarget, `![pasted image](${key})\n`);
+            setUploadedImageUrls((prev) => [...prev, imageUrl]);
+            insertTextAtCursor(event.currentTarget, `![pasted image](${imageUrl})\n`);
         } catch (err: any) {
             setError(err?.message || 'Image upload failed');
         } finally {
@@ -182,7 +161,7 @@ const EditBlog = () => {
                     excerpt,
                     tags,
                     content,
-                    imageURL: imageMap.map((image) => image.url),
+                    imageURL: uploadedImageUrls,
                     isDraft: false,
                 }),
             });
@@ -221,7 +200,7 @@ const EditBlog = () => {
                     excerpt,
                     tags,
                     content,
-                    imageURL: imageMap.map((image) => image.url),
+                    imageURL: uploadedImageUrls,
                     isDraft: true,
                 }),
             });
@@ -382,7 +361,7 @@ const EditBlog = () => {
                                                 rehypePlugins={[rehypeRaw]}
                                                 remarkPlugins={[remarkBreaks]}
                                             >
-                                                {resolvePreviewContent(content)}
+                                                {content}
                                             </ReactMarkdown>
                                         </div>
                                     ) : (
@@ -484,7 +463,7 @@ const EditBlog = () => {
                                                 rehypePlugins={[rehypeRaw]}
                                                 remarkPlugins={[remarkBreaks]}
                                             >
-                                                {resolvePreviewContent(content)}
+                                                {content}
                                             </ReactMarkdown>
                                         </div>
                                     ) : (

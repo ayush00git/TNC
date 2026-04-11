@@ -29,6 +29,7 @@ const ReadBlog = () => {
     const [post, setPost] = useState<BlogPost | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
     const formatDate = (isoString: string) => {
         if (!isoString) return '';
@@ -39,8 +40,6 @@ const ReadBlog = () => {
             day: 'numeric'
         });
     };
-
-    const coverImageUrl = post?.imageURL?.find(url => post?.content && !post.content.includes(url));
 
     const normalizeImagePlaceholders = (content: string, imageUrls: string[]) => {
         let index = 0;
@@ -79,6 +78,23 @@ const ReadBlog = () => {
             fetchBlog();
         }
     }, [blogId]);
+
+    // Handle escape key to close expanded image
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setExpandedImage(null);
+            }
+        };
+
+        if (expandedImage) {
+            document.addEventListener('keydown', handleEscape);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [expandedImage]);
 
     if (loading) {
         return (
@@ -164,14 +180,6 @@ const ReadBlog = () => {
                                 <span className="hidden md:inline">/</span>
                                 <span>{post.readTime}</span>
                             </div>
-                            {/* User Info */}
-                            {coverImageUrl && (
-                                <img
-                                    src={coverImageUrl}
-                                    alt={post.title}
-                                    className="w-full rounded-3xl mb-10 object-cover border border-[#30363d]"
-                                />
-                            )}
                             {post.user && (
                                 <div className="flex flex-col gap-1 mt-8 text-sm font-mono text-[#8b949e]">
                                     <span className="text-white font-bold">Author: {post.user.name}</span>
@@ -185,10 +193,47 @@ const ReadBlog = () => {
                             <ReactMarkdown
                                 rehypePlugins={[rehypeRaw, rehypeHighlight]}
                                 remarkPlugins={[remarkBreaks]}
+                                components={{
+                                    img: ({ src, alt }) => (
+                                        <img
+                                            src={src}
+                                            alt={alt}
+                                            onClick={() => setExpandedImage(src || '')}
+                                            className="cursor-pointer hover:opacity-75 transition-opacity"
+                                            title="Click to expand"
+                                        />
+                                    )
+                                }}
                             >
                                 {renderedContent}
                             </ReactMarkdown>
                         </div>
+
+                        {/* Image Expansion Modal */}
+                        {expandedImage && (
+                            <div
+                                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+                                onClick={() => setExpandedImage(null)}
+                            >
+                                <div
+                                    className="relative max-w-8xl max-h-[90vh] animate-in zoom-in-95 duration-200"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <img
+                                        src={expandedImage}
+                                        alt="Expanded view"
+                                        className="w-full h-full object-contain rounded-lg border border-[#30363d]"
+                                    />
+                                    <button
+                                        onClick={() => setExpandedImage(null)}
+                                        className="absolute -top-12 -right-12 p-2 bg-[#161b22] border border-[#30363d] hover:border-[#ff0080] text-[#8b949e] hover:text-[#ff0080] rounded-full transition-colors"
+                                        aria-label="Close expanded image"
+                                    >
+                                        <X size={24} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Footer Navigation */}
                         <div className="mt-32 pt-10 border-t border-[#30363d] flex justify-between items-center">
