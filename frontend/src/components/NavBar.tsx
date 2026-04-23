@@ -80,6 +80,13 @@ export default function Navbar() {
             Blogs
           </Link>
 
+          <Link
+            to="/projects"
+            className={`text-sm font-medium transition-colors ${isActive('/projects') ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+          >
+            Projects
+          </Link>
+
           {isAuthenticated ? (
             <Link
               to="/room/yaps"
@@ -172,6 +179,8 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-20 left-0 w-full bg-[#060010] border-b border-white/10 p-6 flex flex-col gap-4 animate-in slide-in-from-top-5 duration-200">
           <Link to="/blogs" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Blogs</Link>
+          <Link to="/projects" className="text-slate-300 hover:text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Projects</Link>
+
           {isAuthenticated ? (
             <Link to="/join-room" className="text-slate-300 hover:text-white py-2 flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
               <MessageSquare size={16} />
