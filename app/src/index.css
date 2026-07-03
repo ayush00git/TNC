@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: #010409;
+  color: #e6edf3;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.noise-bg {
+  background-image: url('/noise.png');
+  background-repeat: repeat;
+}
+
+/* Premium Typography for Markdown Content */
+.prose {
+  --tw-prose-body: #c9d1d9;
+  --tw-prose-headings: #ffffff;
+  --tw-prose-links: #58a6ff;
+  --tw-prose-bold: #ffffff;
+  --tw-prose-counters: #8b949e;
+  --tw-prose-bullets: #484f58;
+  --tw-prose-hr: #30363d;
+  --tw-prose-quotes: #8b949e;
+  --tw-prose-quote-borders: #30363d;
+  --tw-prose-captions: #8b949e;
+  --tw-prose-code: #e6edf3;
+  --tw-prose-pre-code: #e6edf3;
+  --tw-prose-pre-bg: #0d1117;
+  --tw-prose-th-borders: #30363d;
+  --tw-prose-td-borders: #21262d;
+}
+
+/* High-end Code Block Styling */
+.prose :where(pre):not(:where([class~="not-prose"] *)) {
+  background-color: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 2rem 0;
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Monospace font for both inline and block code */
+.prose :where(code):not(:where([class~="not-prose"] *)),
+.prose :where(pre code):not(:where([class~="not-prose"] *)) {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-variant-ligatures: contextual;
+}
+
+/* Inline code styles */
+.prose :where(code):not(:where([class~="not-prose"] *)) {
+  background-color: rgba(110, 118, 129, 0.2);
+  color: #ff7b72; /* Subtle accent for inline code */
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.prose :where(pre code):not(:where([class~="not-prose"] *)) {
+  background-color: transparent;
+  padding: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #e6edf3;
+  display: block;
+}
+
+/* Syntax Highlighting Styles (GitHub Dark Dimmed style) */
+.hljs-comment,
+.hljs-quote {
+  color: #768390;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-type {
+  color: #f47067;
+}
+
+.hljs-string,
+.hljs-bullet,
+.hljs-symbol,
+.hljs-name {
+  color: #96d0ff;
+}
+
+.hljs-section,
+.hljs-title,
+.hljs-attribute {
+  color: #dcbdfb;
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-link,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: #f69d50;
+}
+
+.hljs-number,
+.hljs-meta,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-params,
+.hljs-tag {
+  color: #f69d50;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+.hljs-addition {
+  color: #adbac7;
+  background-color: #22282d;
+}
+
+.hljs-deletion {
+  color: #f47067;
+  background-color: #22282d;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
+}
